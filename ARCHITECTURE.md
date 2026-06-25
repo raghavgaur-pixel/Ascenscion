@@ -44,6 +44,18 @@ The codebase follows a pragmatic Clean Architecture model:
   - Connection management, migrations, DAO support, and repositories
 - `profiles`
   - Modular player profile aggregate and profile service
+- `events`
+  - Internal event bus and lifecycle events
+- `task`
+  - Named runtime task scheduling and ownership tracking
+- `runtime.tick`
+  - Centralized game loop and tick registration
+- `session`
+  - Disposable player runtime state and session lifecycle
+- `state`
+  - Reusable transient state containers
+- `context`
+  - Injected runtime context facade
 - `api`
   - Future public API surface for external integration
 - `assets`
@@ -96,16 +108,20 @@ Dependencies flow inward:
 The module graph is now:
 
 1. `core-infrastructure`
-2. `registry`
-3. `database`
-4. `profiles`
+2. `runtime-engine`
+3. `registry`
+4. `database`
+5. `profiles`
+6. `sessions`
 
 Responsibilities are intentionally narrow:
 
 - `core-infrastructure` creates directories, loads base configs, and discovers integrations.
+- `runtime-engine` initializes the internal event bus, task framework, and centralized game loop.
 - `registry` initializes the global `RegistryHub` and foundational registries.
 - `database` loads database settings, starts the connection pool, and exposes migration services.
 - `profiles` registers profile components, registers schema migrations, applies migrations, and exposes the profile service.
+- `sessions` bridges Bukkit join and quit events into runtime sessions and exposes the shared `GameContext`.
 
 ## Module Model
 
@@ -125,6 +141,7 @@ This avoids static initialization order problems and makes later subsystem extra
 - Shared services are thread-safe or explicitly documented as main-thread only.
 - Scheduler access is routed through an abstraction so async policy remains consistent.
 - Player profiles remain cached while online and are flushed asynchronously on shutdown.
+- Session initialization crosses threads explicitly: profile loading is async, runtime session mutation returns to the main thread.
 
 ## Versioning Strategy
 
@@ -172,6 +189,13 @@ Profiles are intentionally modular rather than monolithic.
 - Components serialize to structured YAML payloads behind a serialization boundary.
 - Future modules can add persistent profile data by registering a new profile component definition without editing the `PlayerProfile` aggregate.
 
+`PlayerProfile` and `PlayerSession` are intentionally separate:
+
+- `PlayerProfile`
+  - persistent, reconnect-safe data
+- `PlayerSession`
+  - disposable runtime state for an online player
+
 Built-in profile components currently include:
 
 - settings
@@ -189,6 +213,60 @@ The global registry framework exists to make content and system definitions disc
 - `MutableRegistry` supports runtime registration and lookup.
 - Foundational registries currently exist for schema migrations and profile components.
 - Future systems such as items, skills, bosses, quests, dungeons, NPCs, floors, and achievements should register through the same framework.
+
+## Runtime Engine Strategy
+
+Phase 3 introduces a dedicated runtime foundation that gameplay systems will build on rather than bypass.
+
+### Internal Event Bus
+
+- Internal systems communicate through `EventBus` instead of coupling themselves directly to Bukkit events.
+- Listeners declare priority and owner identifiers.
+- Listener exceptions are isolated and logged without stopping dispatch.
+- Lifecycle events currently include:
+  - module loaded
+  - module unloaded
+  - server ready
+  - server shutdown
+  - player session created
+  - player session loaded
+  - player ready
+  - player leaving
+  - player session saved
+  - player session destroyed
+
+### Task Framework
+
+- Gameplay-facing code should schedule named runtime tasks through `RuntimeTaskService`.
+- Tasks are owned by module identifiers for shutdown cleanup.
+- Sync and async immediate, delayed, and repeating tasks are supported.
+- Modules do not need direct Bukkit scheduler access.
+
+### Game Loop
+
+- A single centralized repeating task drives `GameLoop`.
+- Future gameplay systems should register `TickTask` instances instead of creating their own repeating Bukkit tasks.
+- Tick execution is ordered by `TickPriority`.
+- Tick exceptions are isolated and per-task timings are tracked.
+
+### Session Framework
+
+- `PlayerSessionManager` creates sessions on join and destroys them on quit or shutdown.
+- Session state holds only runtime data:
+  - world and region identifiers
+  - runtime variables
+  - cooldowns
+  - flags
+  - metadata
+  - active effects
+  - combat engagement state
+  - temporary social references
+- Persistent data remains in `PlayerProfile`.
+
+### Game Context
+
+- `GameContext` is an injected facade for composition-time access to the event bus, task system, game loop, profile service, session manager, registries, and database service.
+- It exists to reduce repetitive constructor fan-out in higher-level modules, not to justify hidden global lookups.
 
 ## External Integrations
 
@@ -209,7 +287,7 @@ Each integration will live behind an integration boundary and never contaminate 
 
 1. Architecture and runtime baseline
 2. Persistence, profiles, and registry foundation
-3. Internal event bus and player session lifecycle orchestration
+3. Runtime engine and player session lifecycle orchestration
 4. Typed configuration reload and validation framework hardening
 5. Item framework
 6. Combat and ability engine

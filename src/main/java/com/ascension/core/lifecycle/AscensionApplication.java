@@ -1,5 +1,8 @@
 package com.ascension.core.lifecycle;
 
+import com.ascension.events.EventBus;
+import com.ascension.events.lifecycle.ServerReadyEvent;
+import com.ascension.events.lifecycle.ServerShutdownEvent;
 import com.ascension.core.logging.PluginLogger;
 import com.ascension.core.module.ModuleManager;
 import com.ascension.core.service.ServiceRegistry;
@@ -28,6 +31,7 @@ public final class AscensionApplication {
 
         this.moduleManager.startAll(this.serviceRegistry);
         this.running = true;
+        this.serviceRegistry.find(EventBus.class).ifPresent(eventBus -> eventBus.publish(new ServerReadyEvent()));
         this.logger.info("Ascension application started.");
     }
 
@@ -36,9 +40,9 @@ public final class AscensionApplication {
             return;
         }
 
+        this.serviceRegistry.find(EventBus.class).ifPresent(eventBus -> eventBus.publish(new ServerShutdownEvent()));
         this.moduleManager.stopAll(this.serviceRegistry);
         this.running = false;
         this.logger.info("Ascension application stopped.");
     }
 }
-

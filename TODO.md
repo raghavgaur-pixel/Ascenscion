@@ -29,8 +29,21 @@
 - [x] Add shutdown profile save flow
 - [x] Add structural boundary packages required by the architecture lock
 
+## Phase 3: Runtime Engine And Player Lifecycle
+
+- [x] Add internal event bus
+- [x] Add lifecycle events
+- [x] Add owned runtime task scheduler
+- [x] Add centralized game loop
+- [x] Add tick registration framework
+- [x] Add reusable runtime state containers
+- [x] Add disposable player session model
+- [x] Add player session manager
+- [x] Add Bukkit join and quit session bridge
+- [x] Add injected game context facade
+
 ## Next Phases
 
-- [ ] Phase 3: internal event bus and player session lifecycle orchestration
 - [ ] Phase 4: typed configuration validation and reload framework
 - [ ] Phase 5: item framework
+- [ ] Phase 6: combat and ability engine foundation

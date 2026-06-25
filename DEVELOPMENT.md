@@ -22,6 +22,10 @@
 - Future subsystems should register runtime definitions through the registry framework instead of introducing static globals.
 - SQL belongs in repositories or DAO support only.
 - Persisted module-owned profile data should be modeled as profile components rather than fields added to `PlayerProfile`.
+- Runtime-only player state belongs in `PlayerSession`, not `PlayerProfile`.
+- Future recurring gameplay logic should prefer `GameLoop` tick registration over ad-hoc repeating tasks.
+- Future cross-system runtime communication should prefer the internal event bus over direct module coupling where appropriate.
+- Module-owned runtime tasks and listeners should use owner identifiers that match module ids.
 
 ## Workflow
 
@@ -35,6 +39,7 @@
 - Public services should be constructor-injected and unit-test friendly.
 - Thread-sensitive services should keep Bukkit dependencies at the edges.
 - Repositories should be testable against integration fixtures or mocked database services.
+- Runtime services should keep disposal paths explicit and testable.
 
 ## Definition Of Done Per Subsystem
 
@@ -45,3 +50,4 @@
 - Persistence boundaries defined when needed
 - Documentation updated
 - Registry interactions documented when new registries are introduced
+- Runtime lifecycle and shutdown behavior documented when new engine services are introduced

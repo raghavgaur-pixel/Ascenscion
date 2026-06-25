@@ -2,6 +2,7 @@ package com.ascension.core.service;
 
 import com.ascension.core.di.ServiceContainer;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class ServiceRegistry {
 
@@ -19,8 +20,14 @@ public final class ServiceRegistry {
         return this.container.resolve(type);
     }
 
+    public <T> Optional<T> find(final Class<T> type) {
+        if (!this.container.contains(type)) {
+            return Optional.empty();
+        }
+        return Optional.of(this.container.resolve(type));
+    }
+
     public boolean has(final Class<?> type) {
         return this.container.contains(type);
     }
 }
-

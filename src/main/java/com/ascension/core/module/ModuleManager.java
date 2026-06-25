@@ -1,6 +1,10 @@
 package com.ascension.core.module;
 
+import com.ascension.events.EventBus;
+import com.ascension.events.lifecycle.ModuleLoadedEvent;
+import com.ascension.events.lifecycle.ModuleUnloadedEvent;
 import com.ascension.core.service.ServiceRegistry;
+import com.ascension.task.RuntimeTaskService;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,11 +31,16 @@ public final class ModuleManager {
             for (final AscensionModule module : this.startupOrder) {
                 module.start(services);
                 startedModules.add(module);
+                services.find(EventBus.class).ifPresent(eventBus -> eventBus.publish(new ModuleLoadedEvent(module.id())));
             }
         } catch (final RuntimeException exception) {
             final Deque<AscensionModule> reverseOrder = new ArrayDeque<>(startedModules);
             while (!reverseOrder.isEmpty()) {
-                reverseOrder.removeLast().stop(services);
+                final AscensionModule module = reverseOrder.removeLast();
+                services.find(EventBus.class).ifPresent(eventBus -> eventBus.publish(new ModuleUnloadedEvent(module.id())));
+                module.stop(services);
+                services.find(RuntimeTaskService.class).ifPresent(taskService -> taskService.cancelOwner(module.id()));
+                services.find(EventBus.class).ifPresent(eventBus -> eventBus.unsubscribeOwner(module.id()));
             }
             throw exception;
         }
@@ -40,7 +49,11 @@ public final class ModuleManager {
     public void stopAll(final ServiceRegistry services) {
         final Deque<AscensionModule> reverseOrder = new ArrayDeque<>(this.startupOrder);
         while (!reverseOrder.isEmpty()) {
-            reverseOrder.removeLast().stop(services);
+            final AscensionModule module = reverseOrder.removeLast();
+            services.find(EventBus.class).ifPresent(eventBus -> eventBus.publish(new ModuleUnloadedEvent(module.id())));
+            module.stop(services);
+            services.find(RuntimeTaskService.class).ifPresent(taskService -> taskService.cancelOwner(module.id()));
+            services.find(EventBus.class).ifPresent(eventBus -> eventBus.unsubscribeOwner(module.id()));
         }
     }
 

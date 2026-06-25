@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 2: persistence framework, player profile system, and registry foundation.
+Phase 3: runtime engine and player lifecycle foundation.
 
 ## Completed
 
@@ -23,6 +23,13 @@ Phase 2: persistence framework, player profile system, and registry foundation.
 - Implemented a modular player profile aggregate with component registration and structured component persistence
 - Implemented built-in persistent profile components for settings, unlocked floors, currencies, statistics, and achievements
 - Implemented async player profile loading, online caching, and shutdown saves
+- Implemented an internal event bus with lifecycle event support, priority ordering, and listener isolation
+- Implemented a named runtime task framework with sync, async, delayed, repeating, and owner-scoped cleanup support
+- Implemented a centralized game loop with tick registration, ordered execution, metrics, and exception isolation
+- Implemented reusable runtime state containers for cooldowns, flags, metadata, context variables, and state machines
+- Implemented a disposable player session model separate from persistent profiles
+- Implemented a player session manager with async profile loading, join and quit lifecycle handling, and safe shutdown disposal
+- Implemented a shared injected game context facade for future gameplay modules
 
 ## Not Started
 
@@ -30,21 +37,20 @@ Phase 2: persistence framework, player profile system, and registry foundation.
 - Combat
 - Items
 - Tower progression
-- Internal event bus
-- Player session listeners and runtime profile lifecycle hooks
+- Typed configuration validation and reload
+- Item registry-backed engine
 
 ## Risks / Constraints
 
 - Local environment currently lacks `mvn`, so compile verification is pending.
 - `.git` metadata was present but initially inconsistent; repository content itself is now structured normally.
-- Profile persistence is implemented, but Paper-side join and quit listeners have not been added yet because session orchestration belongs to the next phase.
+- Runtime session orchestration is implemented, but deeper config validation and reload infrastructure still belongs to the next phase.
 
 ## Next Implementation Step
 
-Phase 3 should implement runtime orchestration:
+Phase 4 should harden the configuration system:
 
-- internal event bus contracts
-- player session lifecycle listeners for join, quit, and shutdown
-- profile service integration with live player events
-- typed configuration validation and reload flow for module-owned configs
-- groundwork for future item framework registration events
+- typed config accessors and validation boundaries
+- reload-safe config lifecycle
+- per-module config registration and ownership
+- data definition loading patterns needed before the item framework

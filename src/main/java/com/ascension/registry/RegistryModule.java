@@ -15,6 +15,11 @@ public final class RegistryModule extends AbstractModule {
     }
 
     @Override
+    public java.util.Set<String> dependencies() {
+        return java.util.Set.of("runtime-engine");
+    }
+
+    @Override
     protected void onStart(final ServiceRegistry services) {
         final RegistryHub registryHub = new DefaultRegistryHub();
         registryHub.getOrCreate(AscensionRegistries.SCHEMA_MIGRATIONS);
@@ -29,4 +34,3 @@ public final class RegistryModule extends AbstractModule {
         services.require(PluginLogger.class).info("Registry module stopped.");
     }
 }
-
