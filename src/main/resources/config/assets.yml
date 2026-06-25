@@ -1,0 +1,23 @@
+# Ascension asset framework settings.
+# Every future gameplay definition should be loaded through this pipeline.
+version: 1
+data:
+  root_directory: assets
+  default_namespace: ascension
+  engine_version: 1.0.0
+  strict_validation: true
+  owned_directories:
+    localization: localization
+    items: items
+    skills: skills
+    bosses: bosses
+    floors: floors
+    quests: quests
+    loot_tables: loot_tables
+    recipes: recipes
+    professions: professions
+    dialogue: dialogue
+    npc: npc
+    events: events
+    factions: factions
+    titles: titles

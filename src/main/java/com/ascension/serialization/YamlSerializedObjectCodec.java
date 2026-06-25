@@ -7,7 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 /**
  * YAML-backed codec used for flexible structured payload persistence.
  */
-public final class YamlSerializedObjectCodec {
+public final class YamlSerializedObjectCodec implements SerializedObjectCodec {
 
     /**
      * Encodes a structured object to YAML text.
@@ -15,6 +15,12 @@ public final class YamlSerializedObjectCodec {
      * @param object structured data
      * @return yaml payload
      */
+    @Override
+    public SerializedFormat format() {
+        return SerializedFormat.YAML;
+    }
+
+    @Override
     public String encode(final SerializedObject object) {
         final YamlConfiguration configuration = new YamlConfiguration();
         for (final Map.Entry<String, Object> entry : object.asMap().entrySet()) {
@@ -29,6 +35,7 @@ public final class YamlSerializedObjectCodec {
      * @param yaml yaml payload
      * @return structured data
      */
+    @Override
     public SerializedObject decode(final String yaml) {
         final YamlConfiguration configuration = new YamlConfiguration();
         try {

@@ -1,0 +1,7 @@
+# Ascension localization framework settings.
+# Translation bundles are loaded as assets and resolved through the configured namespace.
+version: 1
+data:
+  default_language: en_us
+  fallback_language: en_us
+  bundle_namespace: ascension

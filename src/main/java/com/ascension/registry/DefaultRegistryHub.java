@@ -15,6 +15,11 @@ public final class DefaultRegistryHub implements RegistryHub {
 
     @Override
     public <K, V> MutableRegistry<K, V> getOrCreate(final RegistryDescriptor<K, V> descriptor) {
+        return this.getOrCreateReloadable(descriptor);
+    }
+
+    @Override
+    public <K, V> ReloadableRegistry<K, V> getOrCreateReloadable(final RegistryDescriptor<K, V> descriptor) {
         Objects.requireNonNull(descriptor, "descriptor");
 
         this.descriptors.putIfAbsent(descriptor.name(), descriptor);
@@ -22,18 +27,23 @@ public final class DefaultRegistryHub implements RegistryHub {
             descriptor.name(),
             ignored -> new ConcurrentMutableRegistry<>(descriptor)
         );
-        return castRegistry(descriptor, registry);
+        return castReloadableRegistry(descriptor, registry);
     }
 
     @Override
     public <K, V> Registry<K, V> require(final RegistryDescriptor<K, V> descriptor) {
+        return this.requireReloadable(descriptor);
+    }
+
+    @Override
+    public <K, V> ReloadableRegistry<K, V> requireReloadable(final RegistryDescriptor<K, V> descriptor) {
         Objects.requireNonNull(descriptor, "descriptor");
 
         final MutableRegistry<?, ?> registry = this.registries.get(descriptor.name());
         if (registry == null) {
             throw new IllegalStateException("Registry not initialized: " + descriptor.name());
         }
-        return castRegistry(descriptor, registry);
+        return castReloadableRegistry(descriptor, registry);
     }
 
     @Override
@@ -55,5 +65,12 @@ public final class DefaultRegistryHub implements RegistryHub {
         }
         return (MutableRegistry<K, V>) registry;
     }
-}
 
+    @SuppressWarnings("unchecked")
+    private static <K, V> ReloadableRegistry<K, V> castReloadableRegistry(
+        final RegistryDescriptor<K, V> descriptor,
+        final MutableRegistry<?, ?> registry
+    ) {
+        return (ReloadableRegistry<K, V>) castRegistry(descriptor, registry);
+    }
+}

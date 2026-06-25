@@ -20,6 +20,7 @@
         <hikari.version>5.1.0</hikari.version>
         <sqlite.version>3.46.1.3</sqlite.version>
         <postgresql.version>42.7.3</postgresql.version>
+        <jackson.version>2.17.1</jackson.version>
         <placeholderapi.version>2.11.6</placeholderapi.version>
         <luckperms.version>5.4</luckperms.version>
         <vault.version>1.7.1</vault.version>
@@ -84,6 +85,16 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>me.clip</groupId>
@@ -210,6 +221,10 @@
                                     <pattern>org.postgresql</pattern>
                                     <shadedPattern>com.ascension.libs.postgresql</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>com.ascension.libs.jackson</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
@@ -224,4 +239,3 @@
         </resources>
     </build>
 </project>
-

@@ -26,6 +26,7 @@ The codebase follows a pragmatic Clean Architecture model:
   - Shared runtime service registration
 - `core.config`
   - Configuration loading and access boundaries
+  - Typed configuration descriptors, validation, and reload-safe ownership
 - `core.platform`
   - Paper platform abstractions
 - `core.scheduler`
@@ -59,7 +60,7 @@ The codebase follows a pragmatic Clean Architecture model:
 - `api`
   - Future public API surface for external integration
 - `assets`
-  - Future asset boundaries
+  - Asset metadata, typed definition loading, localization, and hot reload
 - `math`
   - Future formula and math value objects
 - `version`
@@ -110,15 +111,18 @@ The module graph is now:
 1. `core-infrastructure`
 2. `runtime-engine`
 3. `registry`
-4. `database`
-5. `profiles`
-6. `sessions`
+4. `assets`
+5. `database`
+6. `profiles`
+7. `sessions`
 
 Responsibilities are intentionally narrow:
 
 - `core-infrastructure` creates directories, loads base configs, and discovers integrations.
+  - It also exposes structured serialization codecs and the typed configuration service.
 - `runtime-engine` initializes the internal event bus, task framework, and centralized game loop.
 - `registry` initializes the global `RegistryHub` and foundational registries.
+- `assets` owns typed config-backed asset loading, validation, localization, and reload-safe registry population.
 - `database` loads database settings, starts the connection pool, and exposes migration services.
 - `profiles` registers profile components, registers schema migrations, applies migrations, and exposes the profile service.
 - `sessions` bridges Bukkit join and quit events into runtime sessions and exposes the shared `GameContext`.
@@ -154,8 +158,11 @@ This avoids static initialization order problems and makes later subsystem extra
 - All gameplay values will eventually live in structured configs.
 - No hardcoded identifiers for items, abilities, or floors.
 - Bootstrap config files are loaded through a dedicated configuration service.
-- Future systems will validate configuration on load and fail fast on invalid data.
+- Versioned typed configs are loaded through `TypedConfigurationService`.
+- Typed configs are module-owned, validated on load, and reloadable without partial replacement.
+- Config defaults are generated from codecs rather than scattered raw map access.
 - Database engine selection and pool sizing are configured through `config/database.yml`.
+- Asset and localization framework settings are configured through `config/assets.yml` and `config/localization.yml`.
 
 ## Persistence Strategy
 
@@ -211,8 +218,55 @@ The global registry framework exists to make content and system definitions disc
 - `RegistryDescriptor` defines the name and types of a registry.
 - `RegistryHub` owns registry instances.
 - `MutableRegistry` supports runtime registration and lookup.
-- Foundational registries currently exist for schema migrations and profile components.
+- `ReloadableRegistry` adds atomic map replacement for reload-driven systems.
+- Foundational registries currently exist for schema migrations, profile components, asset types, and built-in asset definition groups.
 - Future systems such as items, skills, bosses, quests, dungeons, NPCs, floors, and achievements should register through the same framework.
+
+## Serialization Strategy
+
+- `SerializedObject` remains the stable structured data boundary between persistence, typed config, and assets.
+- `SerializedObjectCodecRegistry` resolves pluggable codecs by format.
+- YAML and JSON are implemented now; binary-safe transport is represented through a Base64-wrapped structured codec boundary.
+- Future binary formats should remain behind the same codec registry and must not leak format-specific parsing into gameplay code.
+
+## Asset Strategy
+
+Phase 4 establishes a data-first asset pipeline for future MMORPG content.
+
+- Every gameplay-facing definition should eventually be loaded as an immutable `AssetDefinition`.
+- Common identity and metadata live in:
+  - `AssetId`
+  - `AssetDescriptor`
+  - `SemanticVersion`
+  - `AssetCompatibility`
+  - `AssetReference`
+- `AssetType<T>` describes how an asset group is discovered, validated, serialized, and registered.
+- `AssetService` is the only engine service that should discover asset files, validate them, and populate registries.
+- Asset discovery supports:
+  - YAML and JSON inputs
+  - duplicate detection
+  - version compatibility checks
+  - dependency validation
+  - inheritance through `extends`
+  - rollback-safe reload behavior
+- Built-in definition groups now exist for:
+  - localization bundles
+  - items
+  - skills
+  - bosses
+  - floors
+  - quests
+  - professions
+  - loot tables
+  - NPCs
+- These are data definitions only. No gameplay behavior belongs in them.
+
+## Localization Strategy
+
+- Player-facing framework text should resolve through `LocalizationService`.
+- Translation bundles are assets, not ad-hoc message files.
+- Bundle lookup is namespace-aware and driven by typed localization settings.
+- Fallback language resolution is centralized so future GUI and narrative systems can reuse the same service.
 
 ## Runtime Engine Strategy
 

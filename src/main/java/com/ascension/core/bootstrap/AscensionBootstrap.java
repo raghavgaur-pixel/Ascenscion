@@ -1,5 +1,6 @@
 package com.ascension.core.bootstrap;
 
+import com.ascension.assets.module.AssetModule;
 import com.ascension.core.config.ConfigurationService;
 import com.ascension.core.config.YamlConfigurationService;
 import com.ascension.core.di.ServiceContainer;
@@ -50,6 +51,7 @@ public final class AscensionBootstrap {
             new CoreInfrastructureModule(),
             new RuntimeEngineModule(),
             new RegistryModule(),
+            new AssetModule(),
             new DatabaseModule(),
             new ProfileModule(),
             new SessionModule()

@@ -1,0 +1,13 @@
+id: ascension:en_us
+version: 1.0.0
+locale: en_us
+display_name: English (US)
+description: Default Ascension localization bundle for engine-facing messages.
+metadata:
+  owner: assets
+messages:
+  framework.asset.reload.success: Reloaded {count} assets.
+  framework.asset.reload.failure: Asset reload failed.
+  framework.asset.validation.failed: Validation failed for {scope}.
+  framework.localization.ready: Localization framework initialized.
+  framework.configuration.loaded: Loaded configuration {id}.

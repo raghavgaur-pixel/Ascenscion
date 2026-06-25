@@ -24,6 +24,16 @@ public final class RegistryModule extends AbstractModule {
         final RegistryHub registryHub = new DefaultRegistryHub();
         registryHub.getOrCreate(AscensionRegistries.SCHEMA_MIGRATIONS);
         registryHub.getOrCreate(AscensionRegistries.PROFILE_COMPONENTS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.ASSET_TYPES);
+        registryHub.getOrCreateReloadable(AscensionRegistries.LOCALIZATION_BUNDLES);
+        registryHub.getOrCreateReloadable(AscensionRegistries.ITEM_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.SKILL_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.BOSS_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.FLOOR_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.QUEST_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.PROFESSION_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.LOOT_TABLE_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.NPC_DEFINITIONS);
 
         services.register(RegistryHub.class, registryHub);
         services.require(PluginLogger.class).info("Registry module started.");

@@ -34,6 +34,35 @@ public final class SerializedObject {
         return this.values;
     }
 
+    /**
+     * Creates a new object without a top-level key.
+     *
+     * @param key key to remove
+     * @return copied object without the key
+     */
+    public SerializedObject without(final String key) {
+        final Map<String, Object> copied = new LinkedHashMap<>(this.values);
+        copied.remove(Objects.requireNonNull(key, "key"));
+        return SerializedObject.copyOf(copied);
+    }
+
+    /**
+     * Creates a new object by merging this object with overrides.
+     *
+     * <p>Nested maps are merged recursively and override values win.
+     *
+     * @param overrides override values
+     * @return merged object
+     */
+    public SerializedObject merge(final SerializedObject overrides) {
+        final Map<String, Object> merged = new LinkedHashMap<>(this.values);
+        for (final Map.Entry<String, Object> entry : overrides.asMap().entrySet()) {
+            final Object baseValue = merged.get(entry.getKey());
+            merged.put(entry.getKey(), mergeValue(baseValue, entry.getValue()));
+        }
+        return SerializedObject.copyOf(merged);
+    }
+
     public String getString(final String key, final String defaultValue) {
         final Object value = this.values.get(key);
         return value instanceof String stringValue ? stringValue : defaultValue;
@@ -137,5 +166,25 @@ public final class SerializedObject {
         public SerializedObject build() {
             return new SerializedObject(this.values);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object mergeValue(final Object baseValue, final Object overrideValue) {
+        if (baseValue instanceof Map<?, ?> baseMap && overrideValue instanceof Map<?, ?> overrideMap) {
+            final Map<String, Object> merged = new LinkedHashMap<>();
+            for (final Map.Entry<?, ?> entry : ((Map<?, ?>) baseMap).entrySet()) {
+                if (entry.getKey() != null) {
+                    merged.put(entry.getKey().toString(), entry.getValue());
+                }
+            }
+            for (final Map.Entry<?, ?> entry : ((Map<?, ?>) overrideMap).entrySet()) {
+                if (entry.getKey() != null) {
+                    final String key = entry.getKey().toString();
+                    merged.put(key, mergeValue(merged.get(key), entry.getValue()));
+                }
+            }
+            return merged;
+        }
+        return overrideValue;
     }
 }

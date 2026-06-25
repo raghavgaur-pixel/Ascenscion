@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @param <K> registry key type
  * @param <V> registry value type
  */
-public final class ConcurrentMutableRegistry<K, V> implements MutableRegistry<K, V> {
+public final class ConcurrentMutableRegistry<K, V> implements ReloadableRegistry<K, V> {
 
     private final RegistryDescriptor<K, V> descriptor;
     private final Map<K, V> values = new ConcurrentHashMap<>();
@@ -66,5 +66,21 @@ public final class ConcurrentMutableRegistry<K, V> implements MutableRegistry<K,
             );
         }
     }
-}
 
+    @Override
+    public void replaceAll(final Map<K, V> values) {
+        Objects.requireNonNull(values, "values");
+        this.values.clear();
+        for (final Map.Entry<K, V> entry : values.entrySet()) {
+            this.values.put(
+                Objects.requireNonNull(entry.getKey(), "key"),
+                Objects.requireNonNull(entry.getValue(), "value")
+            );
+        }
+    }
+
+    @Override
+    public void clear() {
+        this.values.clear();
+    }
+}

@@ -20,6 +20,10 @@
 - Logging must carry subsystem context where relevant.
 - Composition is preferred over inheritance.
 - Future subsystems should register runtime definitions through the registry framework instead of introducing static globals.
+- Future content definitions should load through `AssetService` rather than direct file parsing.
+- Player-facing framework text should resolve through `LocalizationService`.
+- Versioned structured configs should register through `TypedConfigurationService`.
+- Reloadable definition sets should prefer `ReloadableRegistry` rather than ad-hoc mutable maps.
 - SQL belongs in repositories or DAO support only.
 - Persisted module-owned profile data should be modeled as profile components rather than fields added to `PlayerProfile`.
 - Runtime-only player state belongs in `PlayerSession`, not `PlayerProfile`.
@@ -51,3 +55,4 @@
 - Documentation updated
 - Registry interactions documented when new registries are introduced
 - Runtime lifecycle and shutdown behavior documented when new engine services are introduced
+- Asset ownership, validation, and reload behavior documented when new content groups are introduced

@@ -13,3 +13,9 @@
 - Added a modular player profile system with persistent component registration, structured component serialization, repository persistence, and online profile caching.
 - Added the Phase 3 runtime engine with an internal event bus, lifecycle events, runtime task framework, centralized game loop, and reusable runtime state containers.
 - Added a player session framework with join and quit lifecycle orchestration, async profile attachment, runtime session disposal, and an injected game context.
+- Added a structured serialization codec registry with YAML, JSON, and binary-safe codec support boundaries.
+- Added a typed configuration framework with validation, versioning, generated defaults, and reload-safe ownership.
+- Added reloadable registries and registered built-in asset definition groups.
+- Added the Phase 4 asset framework with immutable asset definitions, generic asset loading, inheritance, dependency validation, duplicate detection, and rollback-safe reload flow.
+- Added a localization framework backed by asset-loaded translation bundles and typed localization settings.
+- Added default asset configuration files and a bundled seed localization asset.

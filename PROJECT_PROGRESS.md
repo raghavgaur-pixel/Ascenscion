@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 3: runtime engine and player lifecycle foundation.
+Phase 4: asset and configuration framework completed.
 
 ## Completed
 
@@ -30,27 +30,36 @@ Phase 3: runtime engine and player lifecycle foundation.
 - Implemented a disposable player session model separate from persistent profiles
 - Implemented a player session manager with async profile loading, join and quit lifecycle handling, and safe shutdown disposal
 - Implemented a shared injected game context facade for future gameplay modules
+- Added a structured serialization codec registry with YAML, JSON, and binary-safe codec boundaries
+- Added a typed configuration framework with versioning, validation, default generation, and reload-safe ownership
+- Extended the registry framework with reloadable registries for hot-swappable definition sets
+- Implemented the asset framework with immutable asset metadata, typed asset groups, validation, inheritance, and duplicate detection
+- Added built-in definition groups for localization, items, skills, bosses, floors, quests, professions, loot tables, and NPCs
+- Implemented a rollback-safe asset reload service with registry integration and dependency validation
+- Added a localization framework backed by translation bundle assets and typed localization settings
+- Added default asset and localization directory scaffolding plus bundled seed localization data
 
 ## Not Started
 
 - Gameplay systems
 - Combat
-- Items
+- Item runtime behavior
+- Stats and attributes
 - Tower progression
-- Typed configuration validation and reload
-- Item registry-backed engine
 
 ## Risks / Constraints
 
 - Local environment currently lacks `mvn`, so compile verification is pending.
 - `.git` metadata was present but initially inconsistent; repository content itself is now structured normally.
-- Runtime session orchestration is implemented, but deeper config validation and reload infrastructure still belongs to the next phase.
+- `javac` is available locally, but dependency-resolved project compilation still requires Maven or an equivalent build runner.
 
 ## Next Implementation Step
 
-Phase 4 should harden the configuration system:
+Phase 5 should implement the stat, attribute, and item foundation on top of the Phase 4 asset layer:
 
-- typed config accessors and validation boundaries
-- reload-safe config lifecycle
-- per-module config registration and ownership
-- data definition loading patterns needed before the item framework
+- stat and attribute model boundaries
+- item stack abstraction and custom item identity
+- item definition interpretation from asset data
+- rarity, stat line, socket, upgrade, and evolution schemas
+- persistent item metadata encoding for Bukkit item stacks
+- item registry-driven runtime lookup and builder services
