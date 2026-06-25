@@ -1,0 +1,6 @@
+server:
+  locale: en_US
+
+runtime:
+  verbose-startup-logging: true
+

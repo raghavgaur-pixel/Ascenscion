@@ -1,0 +1,4 @@
+system:
+  startup: "<green>Ascension is starting.</green>"
+  shutdown: "<yellow>Ascension is shutting down.</yellow>"
+

@@ -1,0 +1,17 @@
+name: Ascension
+version: ${project.version}
+main: com.ascension.core.bootstrap.AscensionPlugin
+api-version: '1.20'
+description: Production-oriented MMORPG tower progression plugin.
+authors:
+  - OpenAI Codex
+softdepend:
+  - PlaceholderAPI
+  - LuckPerms
+  - Vault
+  - WorldEdit
+  - WorldGuard
+  - ProtocolLib
+  - Citizens
+  - MythicMobs
+
