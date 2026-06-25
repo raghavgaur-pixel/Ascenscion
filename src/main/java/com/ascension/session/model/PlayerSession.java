@@ -3,6 +3,7 @@ package com.ascension.session.model;
 import com.ascension.profiles.model.PlayerProfile;
 import com.ascension.session.runtime.ActiveEffectContainer;
 import com.ascension.session.runtime.SessionTaskContainer;
+import com.ascension.stats.attribute.AttributeContainer;
 import com.ascension.state.ContextVariables;
 import com.ascension.state.CooldownContainer;
 import com.ascension.state.RuntimeFlagContainer;
@@ -23,6 +24,7 @@ public final class PlayerSession {
     private final Instant connectedAt;
     private final StateMachine<PlayerSessionState> lifecycleState;
     private final StateMachine<SessionCombatState> combatState;
+    private final AttributeContainer attributes;
     private final ContextVariables runtimeAttributes;
     private final ActiveEffectContainer activeEffects;
     private final SessionTaskContainer activeTasks;
@@ -39,11 +41,12 @@ public final class PlayerSession {
     private volatile String partyId;
     private volatile String guildId;
 
-    public PlayerSession(final UUID uniqueId, final Instant connectedAt) {
+    public PlayerSession(final UUID uniqueId, final Instant connectedAt, final AttributeContainer attributes) {
         this.uniqueId = Objects.requireNonNull(uniqueId, "uniqueId");
         this.connectedAt = Objects.requireNonNull(connectedAt, "connectedAt");
         this.lifecycleState = new StateMachine<>(PlayerSessionState.CREATED, PlayerSession::validLifecycleTransition);
         this.combatState = new StateMachine<>(SessionCombatState.IDLE, (current, next) -> true);
+        this.attributes = Objects.requireNonNull(attributes, "attributes");
         this.runtimeAttributes = new ContextVariables();
         this.activeEffects = new ActiveEffectContainer();
         this.activeTasks = new SessionTaskContainer();
@@ -75,6 +78,10 @@ public final class PlayerSession {
 
     public SessionCombatState combatState() {
         return this.combatState.current();
+    }
+
+    public AttributeContainer attributes() {
+        return this.attributes;
     }
 
     public ContextVariables runtimeAttributes() {
@@ -180,6 +187,7 @@ public final class PlayerSession {
         this.cooldowns.clear();
         this.runtimeFlags.clear();
         this.temporaryMetadata.clear();
+        this.attributes.clear();
         this.runtimeAttributes.clear();
         this.currentFloorId = null;
         this.currentWorldName = null;

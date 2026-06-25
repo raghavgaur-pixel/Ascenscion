@@ -13,6 +13,8 @@ import com.ascension.runtime.tick.GameLoop;
 import com.ascension.session.listener.PlayerSessionListener;
 import com.ascension.session.service.DefaultPlayerSessionManager;
 import com.ascension.session.service.PlayerSessionManager;
+import com.ascension.stats.service.AttributeService;
+import com.ascension.stats.service.StatService;
 import com.ascension.task.RuntimeTaskService;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -28,7 +30,7 @@ public final class SessionModule extends AbstractModule {
 
     @Override
     public java.util.Set<String> dependencies() {
-        return java.util.Set.of("runtime-engine", "profiles", "database", "registry");
+        return java.util.Set.of("runtime-engine", "profiles", "database", "registry", "stats");
     }
 
     @Override
@@ -38,7 +40,8 @@ public final class SessionModule extends AbstractModule {
             services.require(PluginLogger.class),
             services.require(EventBus.class),
             services.require(RuntimeTaskService.class),
-            services.require(PlayerProfileService.class)
+            services.require(PlayerProfileService.class),
+            services.require(AttributeService.class)
         );
 
         services.register(PlayerSessionManager.class, sessionManager);
@@ -48,6 +51,8 @@ public final class SessionModule extends AbstractModule {
             services.require(GameLoop.class),
             services.require(PlayerProfileService.class),
             sessionManager,
+            services.require(StatService.class),
+            services.require(AttributeService.class),
             services.require(RegistryHub.class),
             services.require(DatabaseService.class)
         ));
@@ -67,4 +72,3 @@ public final class SessionModule extends AbstractModule {
         services.require(PluginLogger.class).info("Session module stopped.");
     }
 }
-

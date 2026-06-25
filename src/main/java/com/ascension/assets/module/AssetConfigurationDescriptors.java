@@ -102,6 +102,7 @@ public final class AssetConfigurationDescriptors {
     private static Map<String, String> defaultOwnedDirectories() {
         final Map<String, String> directories = new LinkedHashMap<>();
         directories.put("localization", "localization");
+        directories.put("stats", "stats");
         directories.put("items", "items");
         directories.put("skills", "skills");
         directories.put("bosses", "bosses");

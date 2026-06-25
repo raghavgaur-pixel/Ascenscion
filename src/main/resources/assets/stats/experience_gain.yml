@@ -1,0 +1,11 @@
+id: ascension:experience_gain
+version: 1.0.0
+display_name: Experience Gain
+description: Experience gain rate contribution.
+metadata:
+  owner: stats
+category: utility
+base_value: 1.0
+minimum_value: 0.0
+maximum_value: 100.0
+decimal_places: 4

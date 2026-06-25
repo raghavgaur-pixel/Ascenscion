@@ -1,0 +1,18 @@
+id: ascension:attack_power
+version: 1.0.0
+display_name: Attack Power
+description: Derived physical power rating.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 100000000.0
+decimal_places: 2
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:strength": 2.0
+    "ascension:dexterity": 1.25
+    "ascension:attack_speed": 8.0

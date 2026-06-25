@@ -34,6 +34,8 @@ public final class RegistryModule extends AbstractModule {
         registryHub.getOrCreateReloadable(AscensionRegistries.PROFESSION_DEFINITIONS);
         registryHub.getOrCreateReloadable(AscensionRegistries.LOOT_TABLE_DEFINITIONS);
         registryHub.getOrCreateReloadable(AscensionRegistries.NPC_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.STAT_DEFINITIONS);
+        registryHub.getOrCreate(AscensionRegistries.DERIVED_STAT_CALCULATOR_FACTORIES);
 
         services.register(RegistryHub.class, registryHub);
         services.require(PluginLogger.class).info("Registry module started.");

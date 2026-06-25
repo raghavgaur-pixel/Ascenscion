@@ -1,0 +1,18 @@
+id: ascension:critical_damage_rating
+version: 1.0.0
+display_name: Critical Damage Rating
+description: Derived critical damage rating.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000000.0
+decimal_places: 3
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:critical_damage": 1.0
+    "ascension:critical_chance": 2.0
+    "ascension:dexterity": 0.05

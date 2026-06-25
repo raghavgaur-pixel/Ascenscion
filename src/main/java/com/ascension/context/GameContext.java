@@ -7,6 +7,8 @@ import com.ascension.registry.RegistryHub;
 import com.ascension.runtime.tick.GameLoop;
 import com.ascension.runtime.tick.TickManager;
 import com.ascension.session.service.PlayerSessionManager;
+import com.ascension.stats.service.AttributeService;
+import com.ascension.stats.service.StatService;
 import com.ascension.task.RuntimeTaskService;
 
 /**
@@ -47,6 +49,16 @@ public interface GameContext {
     PlayerSessionManager sessionManager();
 
     /**
+     * @return stat lookup service
+     */
+    StatService statService();
+
+    /**
+     * @return attribute runtime service
+     */
+    AttributeService attributeService();
+
+    /**
      * @return registry hub
      */
     RegistryHub registryHub();
@@ -56,4 +68,3 @@ public interface GameContext {
      */
     DatabaseService databaseService();
 }
-

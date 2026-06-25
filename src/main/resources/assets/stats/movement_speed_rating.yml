@@ -1,0 +1,17 @@
+id: ascension:movement_speed_rating
+version: 1.0.0
+display_name: Movement Speed Rating
+description: Derived movement performance rating.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000000.0
+decimal_places: 2
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:movement_speed": 1.0
+    "ascension:dexterity": 0.20

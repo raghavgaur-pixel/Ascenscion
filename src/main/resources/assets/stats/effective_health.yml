@@ -1,0 +1,17 @@
+id: ascension:effective_health
+version: 1.0.0
+display_name: Effective Health
+description: Derived survivability rating.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000000000.0
+decimal_places: 2
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:maximum_health": 1.0
+    "ascension:defense_rating": 0.40

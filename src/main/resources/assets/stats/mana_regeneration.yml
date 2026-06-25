@@ -1,0 +1,17 @@
+id: ascension:mana_regeneration
+version: 1.0.0
+display_name: Mana Regeneration
+description: Derived mana regeneration rate.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000000.0
+decimal_places: 3
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:intelligence": 0.35
+    "ascension:cooldown_reduction": 5.0

@@ -1,0 +1,11 @@
+id: ascension:magic_penetration
+version: 1.0.0
+display_name: Magic Penetration
+description: Magical defense bypass contribution.
+metadata:
+  owner: stats
+category: offensive
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000.0
+decimal_places: 3

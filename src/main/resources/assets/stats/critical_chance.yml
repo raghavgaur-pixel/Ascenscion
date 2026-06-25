@@ -1,0 +1,11 @@
+id: ascension:critical_chance
+version: 1.0.0
+display_name: Critical Chance
+description: Base critical strike chance contribution.
+metadata:
+  owner: stats
+category: offensive
+base_value: 0.05
+minimum_value: 0.0
+maximum_value: 1.0
+decimal_places: 4

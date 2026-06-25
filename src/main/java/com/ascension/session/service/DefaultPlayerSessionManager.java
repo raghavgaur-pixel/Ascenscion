@@ -12,6 +12,7 @@ import com.ascension.profiles.model.PlayerProfile;
 import com.ascension.profiles.service.PlayerProfileService;
 import com.ascension.session.model.PlayerSession;
 import com.ascension.session.model.PlayerSessionState;
+import com.ascension.stats.service.AttributeService;
 import com.ascension.task.RuntimeTaskService;
 import com.ascension.core.logging.PluginLogger;
 import java.time.Instant;
@@ -33,6 +34,7 @@ public final class DefaultPlayerSessionManager implements PlayerSessionManager {
     private final EventBus eventBus;
     private final RuntimeTaskService taskService;
     private final PlayerProfileService profileService;
+    private final AttributeService attributeService;
     private final ConcurrentHashMap<UUID, PlayerSession> sessions = new ConcurrentHashMap<>();
 
     public DefaultPlayerSessionManager(
@@ -40,13 +42,15 @@ public final class DefaultPlayerSessionManager implements PlayerSessionManager {
         final PluginLogger logger,
         final EventBus eventBus,
         final RuntimeTaskService taskService,
-        final PlayerProfileService profileService
+        final PlayerProfileService profileService,
+        final AttributeService attributeService
     ) {
         this.plugin = plugin;
         this.logger = logger;
         this.eventBus = eventBus;
         this.taskService = taskService;
         this.profileService = profileService;
+        this.attributeService = attributeService;
     }
 
     @Override
@@ -56,7 +60,11 @@ public final class DefaultPlayerSessionManager implements PlayerSessionManager {
             return CompletableFuture.completedFuture(existing);
         }
 
-        final PlayerSession session = new PlayerSession(player.getUniqueId(), Instant.now());
+        final PlayerSession session = new PlayerSession(
+            player.getUniqueId(),
+            Instant.now(),
+            this.attributeService.createContainer()
+        );
         if (!session.transitionLifecycle(PlayerSessionState.LOADING_PROFILE)) {
             throw new IllegalStateException("Failed to transition session into loading state.");
         }

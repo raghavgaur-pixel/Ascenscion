@@ -1,0 +1,11 @@
+id: ascension:healing_power
+version: 1.0.0
+display_name: Healing Power
+description: Outgoing healing contribution.
+metadata:
+  owner: stats
+category: utility
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 100000.0
+decimal_places: 3

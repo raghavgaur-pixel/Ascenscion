@@ -1,0 +1,18 @@
+id: ascension:defense_rating
+version: 1.0.0
+display_name: Defense Rating
+description: Derived blended defense rating.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 100000000.0
+decimal_places: 2
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:defense": 1.0
+    "ascension:magic_defense": 0.5
+    "ascension:vitality": 0.75

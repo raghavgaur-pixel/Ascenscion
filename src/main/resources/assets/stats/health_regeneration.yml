@@ -1,0 +1,17 @@
+id: ascension:health_regeneration
+version: 1.0.0
+display_name: Health Regeneration
+description: Derived health regeneration rate.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000000.0
+decimal_places: 3
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:vitality": 0.25
+    "ascension:healing_power": 0.10

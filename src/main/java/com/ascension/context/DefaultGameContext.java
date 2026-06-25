@@ -7,6 +7,8 @@ import com.ascension.registry.RegistryHub;
 import com.ascension.runtime.tick.GameLoop;
 import com.ascension.runtime.tick.TickManager;
 import com.ascension.session.service.PlayerSessionManager;
+import com.ascension.stats.service.AttributeService;
+import com.ascension.stats.service.StatService;
 import com.ascension.task.RuntimeTaskService;
 import java.util.Objects;
 
@@ -20,6 +22,8 @@ public final class DefaultGameContext implements GameContext {
     private final GameLoop gameLoop;
     private final PlayerProfileService profileService;
     private final PlayerSessionManager sessionManager;
+    private final StatService statService;
+    private final AttributeService attributeService;
     private final RegistryHub registryHub;
     private final DatabaseService databaseService;
 
@@ -29,6 +33,8 @@ public final class DefaultGameContext implements GameContext {
         final GameLoop gameLoop,
         final PlayerProfileService profileService,
         final PlayerSessionManager sessionManager,
+        final StatService statService,
+        final AttributeService attributeService,
         final RegistryHub registryHub,
         final DatabaseService databaseService
     ) {
@@ -37,6 +43,8 @@ public final class DefaultGameContext implements GameContext {
         this.gameLoop = Objects.requireNonNull(gameLoop, "gameLoop");
         this.profileService = Objects.requireNonNull(profileService, "profileService");
         this.sessionManager = Objects.requireNonNull(sessionManager, "sessionManager");
+        this.statService = Objects.requireNonNull(statService, "statService");
+        this.attributeService = Objects.requireNonNull(attributeService, "attributeService");
         this.registryHub = Objects.requireNonNull(registryHub, "registryHub");
         this.databaseService = Objects.requireNonNull(databaseService, "databaseService");
     }
@@ -72,6 +80,16 @@ public final class DefaultGameContext implements GameContext {
     }
 
     @Override
+    public StatService statService() {
+        return this.statService;
+    }
+
+    @Override
+    public AttributeService attributeService() {
+        return this.attributeService;
+    }
+
+    @Override
     public RegistryHub registryHub() {
         return this.registryHub;
     }
@@ -81,4 +99,3 @@ public final class DefaultGameContext implements GameContext {
         return this.databaseService;
     }
 }
-

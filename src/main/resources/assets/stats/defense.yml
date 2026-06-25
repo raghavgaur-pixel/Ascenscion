@@ -1,0 +1,11 @@
+id: ascension:defense
+version: 1.0.0
+display_name: Defense
+description: Base physical defense contribution.
+metadata:
+  owner: stats
+category: defensive
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000000.0
+decimal_places: 2

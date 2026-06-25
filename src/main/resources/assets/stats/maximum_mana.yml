@@ -1,0 +1,17 @@
+id: ascension:maximum_mana
+version: 1.0.0
+display_name: Maximum Mana
+description: Derived maximum mana pool.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 100000000.0
+decimal_places: 2
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:mana": 1.0
+    "ascension:intelligence": 14.0

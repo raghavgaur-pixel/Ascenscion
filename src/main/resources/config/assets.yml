@@ -8,6 +8,7 @@ data:
   strict_validation: true
   owned_directories:
     localization: localization
+    stats: stats
     items: items
     skills: skills
     bosses: bosses

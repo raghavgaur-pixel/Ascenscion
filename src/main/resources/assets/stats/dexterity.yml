@@ -1,0 +1,11 @@
+id: ascension:dexterity
+version: 1.0.0
+display_name: Dexterity
+description: Primary agility and finesse stat.
+metadata:
+  owner: stats
+category: primary
+base_value: 10.0
+minimum_value: 0.0
+maximum_value: 100000.0
+decimal_places: 2

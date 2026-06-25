@@ -1,0 +1,18 @@
+id: ascension:maximum_health
+version: 1.0.0
+display_name: Maximum Health
+description: Derived maximum health pool.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 100000000.0
+decimal_places: 2
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:health": 1.0
+    "ascension:vitality": 12.0
+    "ascension:strength": 1.5

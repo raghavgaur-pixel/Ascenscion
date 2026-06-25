@@ -1,0 +1,11 @@
+id: ascension:critical_damage
+version: 1.0.0
+display_name: Critical Damage
+description: Base critical damage contribution.
+metadata:
+  owner: stats
+category: offensive
+base_value: 0.50
+minimum_value: 0.0
+maximum_value: 10.0
+decimal_places: 4

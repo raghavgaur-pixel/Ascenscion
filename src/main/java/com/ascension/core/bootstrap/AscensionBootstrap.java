@@ -20,6 +20,7 @@ import com.ascension.profiles.module.ProfileModule;
 import com.ascension.registry.RegistryModule;
 import com.ascension.runtime.module.RuntimeEngineModule;
 import com.ascension.session.module.SessionModule;
+import com.ascension.stats.module.StatsModule;
 import java.util.List;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -52,6 +53,7 @@ public final class AscensionBootstrap {
             new RuntimeEngineModule(),
             new RegistryModule(),
             new AssetModule(),
+            new StatsModule(),
             new DatabaseModule(),
             new ProfileModule(),
             new SessionModule()

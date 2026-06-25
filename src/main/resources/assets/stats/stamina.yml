@@ -1,0 +1,11 @@
+id: ascension:stamina
+version: 1.0.0
+display_name: Stamina
+description: Core stamina-related stat contribution.
+metadata:
+  owner: stats
+category: resource
+base_value: 75.0
+minimum_value: 0.0
+maximum_value: 1000000.0
+decimal_places: 2

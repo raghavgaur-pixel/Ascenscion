@@ -1,0 +1,11 @@
+id: ascension:armor_penetration
+version: 1.0.0
+display_name: Armor Penetration
+description: Physical defense bypass contribution.
+metadata:
+  owner: stats
+category: offensive
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 1000.0
+decimal_places: 3

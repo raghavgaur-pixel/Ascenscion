@@ -1,0 +1,18 @@
+id: ascension:magic_power
+version: 1.0.0
+display_name: Magic Power
+description: Derived magical power rating.
+metadata:
+  owner: stats
+category: derived
+base_value: 0.0
+minimum_value: 0.0
+maximum_value: 100000000.0
+decimal_places: 2
+formula:
+  type: linear
+  base: 0.0
+  coefficients:
+    "ascension:intelligence": 2.5
+    "ascension:mana": 0.75
+    "ascension:magic_penetration": 1.0

@@ -1,0 +1,11 @@
+id: ascension:gathering_speed
+version: 1.0.0
+display_name: Gathering Speed
+description: Gathering action speed contribution.
+metadata:
+  owner: stats
+category: profession
+base_value: 1.0
+minimum_value: 0.0
+maximum_value: 100.0
+decimal_places: 4

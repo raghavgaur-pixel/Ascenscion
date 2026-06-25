@@ -13,6 +13,8 @@ import com.ascension.assets.localization.TranslationBundleDefinition;
 import com.ascension.assets.model.AssetId;
 import com.ascension.database.migration.SchemaMigration;
 import com.ascension.profiles.component.ProfileComponentDefinition;
+import com.ascension.stats.calculation.DerivedStatCalculatorFactory;
+import com.ascension.stats.definition.StatDefinition;
 
 /**
  * Canonical registry descriptors used by the foundation modules.
@@ -54,6 +56,16 @@ public final class AscensionRegistries {
 
     public static final RegistryDescriptor<AssetId, NpcDefinition> NPC_DEFINITIONS =
         new RegistryDescriptor<>("npc_definitions", AssetId.class, NpcDefinition.class);
+
+    public static final RegistryDescriptor<AssetId, StatDefinition> STAT_DEFINITIONS =
+        new RegistryDescriptor<>("stat_definitions", AssetId.class, StatDefinition.class);
+
+    public static final RegistryDescriptor<String, DerivedStatCalculatorFactory> DERIVED_STAT_CALCULATOR_FACTORIES =
+        new RegistryDescriptor<>(
+            "derived_stat_calculator_factories",
+            String.class,
+            DerivedStatCalculatorFactory.class
+        );
 
     private AscensionRegistries() {
     }
