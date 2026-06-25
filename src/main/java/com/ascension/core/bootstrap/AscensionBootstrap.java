@@ -14,6 +14,9 @@ import com.ascension.core.platform.PluginPlatform;
 import com.ascension.core.scheduler.BukkitTaskScheduler;
 import com.ascension.core.scheduler.TaskScheduler;
 import com.ascension.core.service.ServiceRegistry;
+import com.ascension.database.module.DatabaseModule;
+import com.ascension.profiles.module.ProfileModule;
+import com.ascension.registry.RegistryModule;
 import java.util.List;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -42,7 +45,10 @@ public final class AscensionBootstrap {
 
         final ServiceRegistry serviceRegistry = new ServiceRegistry(container);
         final ModuleManager moduleManager = new ModuleManager(List.of(
-            new CoreInfrastructureModule()
+            new CoreInfrastructureModule(),
+            new RegistryModule(),
+            new DatabaseModule(),
+            new ProfileModule()
         ));
 
         this.application = new AscensionApplication(logger, serviceRegistry, moduleManager);
@@ -61,4 +67,3 @@ public final class AscensionBootstrap {
         }
     }
 }
-

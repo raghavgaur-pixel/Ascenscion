@@ -19,5 +19,4 @@ The shaded plugin jar will be produced under `target/`.
 
 - Optional integrations are compile-time optional and runtime optional.
 - SQLite is intended for local development only.
-- PostgreSQL support will be implemented behind the database subsystem.
-
+- PostgreSQL is supported behind the database subsystem through configuration.

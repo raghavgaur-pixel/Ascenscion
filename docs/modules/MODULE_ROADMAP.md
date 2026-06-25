@@ -3,6 +3,8 @@
 ## Foundation
 
 - `core`
+- `registry`
+- `serialization`
 - `config`
 - `database`
 - `profiles`
@@ -42,4 +44,3 @@
 - `npc`
 - `api`
 - `integrations`
-

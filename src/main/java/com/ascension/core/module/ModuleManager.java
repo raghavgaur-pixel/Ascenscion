@@ -22,8 +22,18 @@ public final class ModuleManager {
     }
 
     public void startAll(final ServiceRegistry services) {
-        for (final AscensionModule module : this.startupOrder) {
-            module.start(services);
+        final List<AscensionModule> startedModules = new ArrayList<>();
+        try {
+            for (final AscensionModule module : this.startupOrder) {
+                module.start(services);
+                startedModules.add(module);
+            }
+        } catch (final RuntimeException exception) {
+            final Deque<AscensionModule> reverseOrder = new ArrayDeque<>(startedModules);
+            while (!reverseOrder.isEmpty()) {
+                reverseOrder.removeLast().stop(services);
+            }
+            throw exception;
         }
     }
 
@@ -90,4 +100,3 @@ public final class ModuleManager {
         ordered.add(module);
     }
 }
-

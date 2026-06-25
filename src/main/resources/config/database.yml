@@ -1,0 +1,18 @@
+database:
+  type: SQLITE
+
+  sqlite:
+    file: data/ascension.db
+
+  postgresql:
+    host: localhost
+    port: 5432
+    database: ascension
+    username: ascension
+    password: change-me
+
+  pool:
+    maximum-size: 10
+    minimum-idle: 2
+
+  workers: 4

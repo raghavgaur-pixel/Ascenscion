@@ -6,4 +6,8 @@
 - Added architecture, development, progress, todo, and changelog documentation.
 - Added Maven project descriptor with Paper-focused dependency management.
 - Added foundational runtime framework for bootstrap, modules, DI, configuration, scheduling, and integration discovery.
-
+- Added architecture-lock boundary packages for future API, networking, scripting, tooling, and diagnostics concerns.
+- Added a typed global registry framework and registry module.
+- Added the database layer foundation with engine selection, HikariCP pooling, async execution, transactions, DAO support, and migrations.
+- Added SQLite and PostgreSQL connection providers and default database configuration.
+- Added a modular player profile system with persistent component registration, structured component serialization, repository persistence, and online profile caching.
