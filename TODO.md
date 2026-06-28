@@ -45,9 +45,9 @@
 ## Next Phases
 
 - [x] Phase 4: typed configuration validation, asset loading, localization, and reload framework
-- [ ] Phase 5: stat, attribute, and item foundation
-- [ ] Define item asset schemas and runtime item stack abstraction
-- [ ] Add stat and attribute value objects plus calculation boundaries
-- [ ] Add item metadata encoding and decoding for Bukkit item storage
-- [ ] Add item registry-backed runtime lookup and item builder services
+- [x] Phase 5: stat, attribute, and item foundation
+- [x] Define item asset schemas and runtime item stack abstraction
+- [x] Add stat and attribute value objects plus calculation boundaries
+- [x] Add item metadata encoding and decoding for Bukkit item storage
+- [x] Add item registry-backed runtime lookup and item builder services
 - [ ] Phase 6: combat and ability engine foundation
