@@ -57,7 +57,8 @@ public final class AscensionBootstrap {
             new DatabaseModule(),
             new ProfileModule(),
             new SessionModule(),
-            new com.ascension.items.module.ItemModule()
+            new com.ascension.items.module.ItemModule(),
+            new com.ascension.equipment.module.EquipmentModule()
         ));
 
         this.application = new AscensionApplication(logger, serviceRegistry, moduleManager);

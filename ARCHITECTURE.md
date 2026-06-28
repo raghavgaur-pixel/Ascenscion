@@ -220,6 +220,17 @@ Phase 5 establishes a component-based runtime item model.
 - `AscensionItem` acts as the runtime representation containing instance state and identity.
 - Platform boundaries: The engine avoids passing Bukkit `ItemStack` objects directly. `BukkitItemMetadataEncoder` handles saving/loading of unique identities into the `PersistentDataContainer` behind an `ItemMetadataEncoder` interface.
 
+## Equipment Strategy
+
+Phase 6 establishes a dedicated Equipment Engine separate from the Item Engine.
+
+- **Separation of Concerns:** The Item Engine defines "what an item is" while the Equipment Engine defines "what happens when an item is equipped".
+- **Runtime State:** Equipment is considered runtime state and is tied to the `PlayerSession`. Persistent storage remains the responsibility of the `PlayerProfile`.
+- **Stat Integration:** Equipment never modifies calculated stats directly. All stat changes flow through the existing Stat & Modifier Engine. The Equipment Engine only applies and removes `AttributeModifier`s.
+- **Event-Driven:** Runtime gameplay systems communicate via the internal `EventBus`. The Equipment Engine fires events (e.g., `ItemEquippedEvent`) rather than coupling modules directly.
+- **Platform Independence:** Gameplay systems interact with the platform-independent `AscensionItem` and `EquipmentContainer` abstractions. Bukkit remains strictly an adapter layer.
+- **Data-Driven & Composition:** The engine prefers composition over inheritance. Future equipment features are assembled from reusable components registered within `ItemDefinition`, and loaded via the `AssetService`.
+
 ## Registry Strategy
 
 The global registry framework exists to make content and system definitions discoverable without static managers.

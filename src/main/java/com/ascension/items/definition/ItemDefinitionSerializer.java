@@ -9,7 +9,11 @@ import com.ascension.assets.model.AssetId;
 import com.ascension.assets.model.SemanticVersion;
 import com.ascension.items.component.ItemComponent;
 import com.ascension.serialization.SerializedObject;
+import com.ascension.items.component.StatModifierComponent;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class ItemDefinitionSerializer implements AssetSerializer<ItemDefinition> {
 
@@ -26,8 +30,18 @@ public final class ItemDefinitionSerializer implements AssetSerializer<ItemDefin
             java.util.Set.of()
         );
 
-        // Future systems will dynamically parse components here
-        return new ItemDefinition(descriptor, List.of(), object);
+        List<ItemComponent> components = new ArrayList<>();
+        Map<String, Long> rawStatLines = object.getLongMap("stats");
+        if (!rawStatLines.isEmpty()) {
+            Map<AssetId, Double> modifiers = new LinkedHashMap<>();
+            for (Map.Entry<String, Long> entry : rawStatLines.entrySet()) {
+                modifiers.put(AssetId.parse(entry.getKey()), entry.getValue().doubleValue());
+            }
+            components.add(new StatModifierComponent(modifiers));
+        }
+
+        // Future systems will dynamically parse more components here
+        return new ItemDefinition(descriptor, components, object);
     }
 
     @Override
