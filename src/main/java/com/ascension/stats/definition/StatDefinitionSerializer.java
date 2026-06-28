@@ -147,9 +147,15 @@ public final class StatDefinitionSerializer implements AssetSerializer<StatDefin
     }
 
     private static Map<String, Object> asMap(final Object value) {
-        if (!(value instanceof Map<?, ?> rawMap)) {
+        final Map<?, ?> rawMap;
+        if (value instanceof Map<?, ?> mapValue) {
+            rawMap = mapValue;
+        } else if (value instanceof org.bukkit.configuration.ConfigurationSection section) {
+            rawMap = section.getValues(false);
+        } else {
             return Map.of();
         }
+
         final Map<String, Object> result = new LinkedHashMap<>();
         for (final Map.Entry<?, ?> entry : rawMap.entrySet()) {
             if (entry.getKey() != null) {
