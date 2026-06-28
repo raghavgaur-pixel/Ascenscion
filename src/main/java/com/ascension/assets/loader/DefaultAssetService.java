@@ -151,7 +151,7 @@ public final class DefaultAssetService implements AssetService {
 
             final LoadedAssetGroup loadedGroup = loadGroup(assetType, settings);
             final Map<String, Map<AssetId, AssetDefinition>> definitions = snapshotCurrentDefinitions();
-            definitions.put(assetType.id(), castDefinitionMap(loadedGroup.values()));
+            definitions.put(assetType.id(), (Map<AssetId, AssetDefinition>) (Map<?, ?>) loadedGroup.values());
 
             final ValidationCollector collector = new ValidationCollector();
             collector.merge(loadedGroup.report());

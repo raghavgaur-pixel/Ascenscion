@@ -211,6 +211,15 @@ Built-in profile components currently include:
 - statistics
 - achievements
 
+## Item Strategy
+
+Phase 5 establishes a component-based runtime item model.
+
+- `ItemDefinition` acts as an immutable blueprint and is loaded via the `AssetService`.
+- Composition over inheritance: Item blueprints utilize models such as `ItemRarity`, `StatLine`, `SocketSchema`, `UpgradeSchema`, and `EvolutionSchema` instead of subclasses like `SwordItem`.
+- `AscensionItem` acts as the runtime representation containing instance state and identity.
+- Platform boundaries: The engine avoids passing Bukkit `ItemStack` objects directly. `BukkitItemMetadataEncoder` handles saving/loading of unique identities into the `PersistentDataContainer` behind an `ItemMetadataEncoder` interface.
+
 ## Registry Strategy
 
 The global registry framework exists to make content and system definitions discoverable without static managers.
