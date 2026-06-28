@@ -222,10 +222,6 @@
                                     <shadedPattern>com.ascension.libs.hikari</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.sqlite</pattern>
-                                    <shadedPattern>com.ascension.libs.sqlite</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.postgresql</pattern>
                                     <shadedPattern>com.ascension.libs.postgresql</shadedPattern>
                                 </relocation>
