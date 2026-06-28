@@ -6,7 +6,7 @@ This repository is being built in strict subsystem order. Phase 1 establishes ar
 
 ## Technology Baseline
 
-- Java 21
+- Java 21-26
 - Maven
 - Paper API
 - Adventure API
