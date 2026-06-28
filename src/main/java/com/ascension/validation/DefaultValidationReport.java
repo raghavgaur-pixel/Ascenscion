@@ -12,10 +12,6 @@ public record DefaultValidationReport(List<ValidationIssue> issues) implements V
         issues = List.copyOf(issues);
     }
 
-    @Override
-    public Collection<ValidationIssue> issues() {
-        return this.issues;
-    }
 
     @Override
     public boolean hasErrors() {
