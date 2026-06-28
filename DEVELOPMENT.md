@@ -26,6 +26,8 @@
 - Reloadable definition sets should prefer `ReloadableRegistry` rather than ad-hoc mutable maps.
 - SQL belongs in repositories or DAO support only.
 - Persisted module-owned profile data should be modeled as profile components rather than fields added to `PlayerProfile`.
+- The Item Engine must use composition. New features for items should be modeled as schemas or components registered within `ItemDefinition` rather than inheritance (e.g. do not create `SwordItem`).
+- Bukkit's `ItemStack` should only be interacted with via adapter boundaries (like `ItemMetadataEncoder`); gameplay logic should use `AscensionItem`.
 - Runtime-only player state belongs in `PlayerSession`, not `PlayerProfile`.
 - Future recurring gameplay logic should prefer `GameLoop` tick registration over ad-hoc repeating tasks.
 - Future cross-system runtime communication should prefer the internal event bus over direct module coupling where appropriate.

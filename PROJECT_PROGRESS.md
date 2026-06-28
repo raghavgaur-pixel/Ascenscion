@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 4: asset and configuration framework completed.
+Phase 5: stat, attribute, and item foundation completed.
 
 ## Completed
 
@@ -43,8 +43,6 @@ Phase 4: asset and configuration framework completed.
 
 - Gameplay systems
 - Combat
-- Item runtime behavior
-- Stats and attributes
 - Tower progression
 
 ## Risks / Constraints
@@ -55,11 +53,4 @@ Phase 4: asset and configuration framework completed.
 
 ## Next Implementation Step
 
-Phase 5 should implement the stat, attribute, and item foundation on top of the Phase 4 asset layer:
-
-- stat and attribute model boundaries
-- item stack abstraction and custom item identity
-- item definition interpretation from asset data
-- rarity, stat line, socket, upgrade, and evolution schemas
-- persistent item metadata encoding for Bukkit item stacks
-- item registry-driven runtime lookup and builder services
+Phase 6: combat and ability engine foundation

@@ -57,6 +57,14 @@
             <id>citizens</id>
             <url>https://maven.citizensnpcs.co/repo</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>lumine</id>
+            <url>https://mvn.lumine.io/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -212,10 +220,6 @@
                                 <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>com.ascension.libs.hikari</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.sqlite</pattern>
-                                    <shadedPattern>com.ascension.libs.sqlite</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.postgresql</pattern>

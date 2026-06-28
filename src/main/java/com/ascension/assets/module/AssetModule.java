@@ -111,12 +111,6 @@ public final class AssetModule extends AbstractModule {
 
         assetService.registerType(localization);
         assetService.registerType(genericType(
-            "items",
-            "items",
-            AscensionRegistries.ITEM_DEFINITIONS,
-            ItemDefinition::new
-        ));
-        assetService.registerType(genericType(
             "skills",
             "skills",
             AscensionRegistries.SKILL_DEFINITIONS,
