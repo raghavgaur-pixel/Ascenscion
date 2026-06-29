@@ -50,4 +50,6 @@
 - [x] Add stat and attribute value objects plus calculation boundaries
 - [x] Add item metadata encoding and decoding for Bukkit item storage
 - [x] Add item registry-backed runtime lookup and item builder services
-- [ ] Phase 6: combat and ability engine foundation
+- [x] Phase 6: Equipment engine foundation
+- [x] Phase 7: Effects engine foundation
+- [ ] Phase 8: combat and ability engine foundation

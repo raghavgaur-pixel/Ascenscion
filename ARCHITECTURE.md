@@ -357,6 +357,16 @@ Integrations are optional and must degrade gracefully:
 
 Each integration will live behind an integration boundary and never contaminate core domain logic.
 
+## Effects Strategy
+
+Phase 7 establishes a universal runtime engine for managing temporary and persistent gameplay effects.
+
+- **Separation of Concerns:** The Effects Engine orchestrates effect lifecycles, durations, stacking behaviors, and event emissions. It does not hardcode mechanics like bleeding or regeneration.
+- **Runtime State:** Effects (`EffectInstance`) are bound to the runtime `PlayerSession` via `EffectContainer`.
+- **Modifier Integration:** The Effects Engine never directly alters calculated stats. Instead, it interacts directly with the existing Modifier framework to apply/remove `AttributeModifier` instances.
+- **Data-Driven Rules:** Exposes `EffectRule` for determining application validity (e.g. immunity, category constraints), supporting future combat extensions naturally.
+- **Session Lifecycle:** Automatically purges active effects gracefully upon player logout or session destruction via the `EffectSessionListener`.
+
 ## Near-Term Phase Sequence
 
 1. Architecture and runtime baseline
@@ -364,4 +374,6 @@ Each integration will live behind an integration boundary and never contaminate 
 3. Runtime engine and player session lifecycle orchestration
 4. Typed configuration reload and validation framework hardening
 5. Item framework
-6. Combat and ability engine
+6. Equipment engine
+7. Effects engine
+8. Combat and ability engine

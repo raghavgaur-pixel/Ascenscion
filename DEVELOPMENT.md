@@ -32,6 +32,7 @@
 - Future recurring gameplay logic should prefer `GameLoop` tick registration over ad-hoc repeating tasks.
 - Future cross-system runtime communication should prefer the internal event bus over direct module coupling where appropriate.
 - Module-owned runtime tasks and listeners should use owner identifiers that match module ids.
+- The Effects Engine should be used for all future gameplay effects (e.g. buffs, debuffs) rather than creating distinct ticking systems. It should drive changes exclusively through the modifier framework.
 
 ## Workflow
 

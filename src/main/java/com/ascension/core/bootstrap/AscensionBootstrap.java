@@ -21,6 +21,7 @@ import com.ascension.registry.RegistryModule;
 import com.ascension.runtime.module.RuntimeEngineModule;
 import com.ascension.session.module.SessionModule;
 import com.ascension.stats.module.StatsModule;
+import com.ascension.effects.module.EffectsModule;
 import java.util.List;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -58,7 +59,8 @@ public final class AscensionBootstrap {
             new ProfileModule(),
             new SessionModule(),
             new com.ascension.items.module.ItemModule(),
-            new com.ascension.equipment.module.EquipmentModule()
+            new com.ascension.equipment.module.EquipmentModule(),
+            new EffectsModule()
         ));
 
         this.application = new AscensionApplication(logger, serviceRegistry, moduleManager);
