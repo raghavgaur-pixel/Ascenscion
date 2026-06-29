@@ -60,7 +60,8 @@ public final class AscensionBootstrap {
             new SessionModule(),
             new com.ascension.items.module.ItemModule(),
             new com.ascension.equipment.module.EquipmentModule(),
-            new EffectsModule()
+            new EffectsModule(),
+            new com.ascension.combat.module.CombatModule()
         ));
 
         this.application = new AscensionApplication(logger, serviceRegistry, moduleManager);

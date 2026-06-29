@@ -55,4 +55,4 @@ Phase 7: Effects engine framework completed.
 
 ## Next Implementation Step
 
-Phase 8: combat and ability engine foundation
+Phase 9: Ability and content systems
