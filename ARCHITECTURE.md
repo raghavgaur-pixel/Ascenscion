@@ -377,3 +377,14 @@ Phase 7 establishes a universal runtime engine for managing temporary and persis
 6. Equipment engine
 7. Effects engine
 8. Combat and ability engine
+
+## Combat Engine
+
+The Combat Engine provides a deterministic pipeline for resolving combat interactions without implementing specific weapons, abilities, or mechanics. It relies on a single source of truth, `CombatContext`, that captures initial immutable `CombatSnapshot`s of the entities involved.
+
+**Core Principles:**
+- **Deterministic Pipeline:** The service dictates a strict sequence: Validation -> Snapshotting -> Damage Calculation -> Critical Resolution -> Damage Application -> Entity Death -> Completion.
+- **Stat Integration:** Relies entirely on the existing Effects Engine and Attribute Engine via snapshots. The Combat Engine does not recalculate stats itself.
+- **Extensible Subsystems:** New damage types and sources can be freely registered.
+- **Event-Driven:** The engine broadcasts events (e.g., `AttackStartedEvent`, `DamageCalculatedEvent`, `DamageAppliedEvent`) through the standard `EventBus`, allowing other systems (like weapons or buffs) to intercept, modify, or react to combat without tight coupling.
+- **Immutable Context:** Repeated combat steps modify intermediate damage results encapsulated inside the `CombatContext`, leaving the original `CombatSnapshot`s intact. Health is mutated exactly once at the end of the pipeline.

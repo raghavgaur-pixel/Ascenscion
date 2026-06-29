@@ -52,4 +52,5 @@
 - [x] Add item registry-backed runtime lookup and item builder services
 - [x] Phase 6: Equipment engine foundation
 - [x] Phase 7: Effects engine foundation
-- [ ] Phase 8: combat and ability engine foundation
+- [x] Phase 8: combat engine foundation
+- [ ] Phase 9: ability and content systems

@@ -22,3 +22,7 @@
 - Implemented Phase 5 Item Engine foundation with item definition schemas, runtime item abstraction, and item registry services.
 - Implemented Phase 6 Equipment Engine foundation, including runtime slots, transactions, rule validation, event integration, and stat modifiers.
 - Implemented Phase 7 Effects Engine framework with `EffectService` managing effect lifecycles, configurable stacking behaviors, duration ticking, modifier application, and session integration.
+- Implemented Phase 8 Combat Engine foundation with a deterministic pipeline orchestrated by `CombatService`.
+- Added runtime combat abstractions including `DamageType`, `DamageSource`, `CombatEntity`, and `CombatContext`.
+- Added combat state snapshots (`CombatSnapshot`) and isolated health mutations to a single final step in the damage pipeline.
+- Implemented combat events broadcasted through `EventBus` (`AttackStartedEvent`, `DamageCalculatedEvent`, etc).
