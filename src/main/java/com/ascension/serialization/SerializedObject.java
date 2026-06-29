@@ -204,7 +204,14 @@ public final class SerializedObject {
 
     @SuppressWarnings("unchecked")
     private static Object mergeValue(final Object baseValue, final Object overrideValue) {
-        if (baseValue instanceof Map<?, ?> baseMap && overrideValue instanceof Map<?, ?> overrideMap) {
+        final Object normalizedBase = baseValue instanceof org.bukkit.configuration.ConfigurationSection baseSection
+            ? baseSection.getValues(false)
+            : baseValue;
+        final Object normalizedOverride = overrideValue instanceof org.bukkit.configuration.ConfigurationSection overrideSection
+            ? overrideSection.getValues(false)
+            : overrideValue;
+
+        if (normalizedBase instanceof Map<?, ?> baseMap && normalizedOverride instanceof Map<?, ?> overrideMap) {
             final Map<String, Object> merged = new LinkedHashMap<>();
             for (final Map.Entry<?, ?> entry : ((Map<?, ?>) baseMap).entrySet()) {
                 if (entry.getKey() != null) {
@@ -219,6 +226,6 @@ public final class SerializedObject {
             }
             return merged;
         }
-        return overrideValue;
+        return normalizedOverride;
     }
 }

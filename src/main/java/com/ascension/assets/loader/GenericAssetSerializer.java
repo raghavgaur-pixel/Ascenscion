@@ -42,6 +42,12 @@ public final class GenericAssetSerializer<T extends AssetDefinition> implements 
                     if (type != null && id != null) {
                         dependencies.add(new AssetReference(type.toString(), AssetId.parse(id.toString())));
                     }
+                } else if (entry instanceof org.bukkit.configuration.ConfigurationSection section) {
+                    final Object type = section.get("type");
+                    final Object id = section.get("id");
+                    if (type != null && id != null) {
+                        dependencies.add(new AssetReference(type.toString(), AssetId.parse(id.toString())));
+                    }
                 } else if (entry != null) {
                     dependencies.add(new AssetReference(this.assetType, AssetId.parse(entry.toString())));
                 }
@@ -102,15 +108,21 @@ public final class GenericAssetSerializer<T extends AssetDefinition> implements 
     }
 
     private static Map<String, Object> asMap(final Object value) {
-        if (value instanceof Map<?, ?> rawMap) {
-            final java.util.LinkedHashMap<String, Object> result = new java.util.LinkedHashMap<>();
-            for (final Map.Entry<?, ?> entry : rawMap.entrySet()) {
-                if (entry.getKey() != null) {
-                    result.put(entry.getKey().toString(), entry.getValue());
-                }
-            }
-            return result;
+        final Map<?, ?> rawMap;
+        if (value instanceof Map<?, ?> mapValue) {
+            rawMap = mapValue;
+        } else if (value instanceof org.bukkit.configuration.ConfigurationSection section) {
+            rawMap = section.getValues(false);
+        } else {
+            return Map.of();
         }
-        return Map.of();
+
+        final java.util.LinkedHashMap<String, Object> result = new java.util.LinkedHashMap<>();
+        for (final Map.Entry<?, ?> entry : rawMap.entrySet()) {
+            if (entry.getKey() != null) {
+                result.put(entry.getKey().toString(), entry.getValue());
+            }
+        }
+        return result;
     }
 }
