@@ -131,6 +131,14 @@ public final class DefaultTypedConfigurationService implements TypedConfiguratio
                 }
             }
             return SerializedObject.copyOf(values);
+        } else if (payload instanceof org.bukkit.configuration.ConfigurationSection section) {
+            final java.util.LinkedHashMap<String, Object> values = new java.util.LinkedHashMap<>();
+            for (final Map.Entry<?, ?> entry : section.getValues(false).entrySet()) {
+                if (entry.getKey() != null) {
+                    values.put(entry.getKey().toString(), entry.getValue());
+                }
+            }
+            return SerializedObject.copyOf(values);
         }
         return rawObject;
     }
