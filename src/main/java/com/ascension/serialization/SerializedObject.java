@@ -79,6 +79,17 @@ public final class SerializedObject {
         return defaultValue;
     }
 
+    public double getDouble(final String key, final double defaultValue) {
+        final Object value = this.values.get(key);
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+        if (value instanceof String stringValue) {
+            return Double.parseDouble(stringValue);
+        }
+        return defaultValue;
+    }
+
     public boolean getBoolean(final String key, final boolean defaultValue) {
         final Object value = this.values.get(key);
         if (value instanceof Boolean booleanValue) {
@@ -149,6 +160,29 @@ public final class SerializedObject {
             }
         }
         return Set.copyOf(result);
+    }
+
+    public java.util.List<SerializedObject> getObjectList(final String key) {
+        final Object value = this.values.get(key);
+        if (!(value instanceof Collection<?> collection)) {
+            return java.util.List.of();
+        }
+
+        final java.util.List<SerializedObject> result = new java.util.ArrayList<>();
+        for (final Object entry : collection) {
+            if (entry instanceof Map<?, ?> map) {
+                final Map<String, Object> stringMap = new LinkedHashMap<>();
+                for (final Map.Entry<?, ?> mapEntry : map.entrySet()) {
+                    if (mapEntry.getKey() != null) {
+                        stringMap.put(mapEntry.getKey().toString(), mapEntry.getValue());
+                    }
+                }
+                result.add(SerializedObject.copyOf(stringMap));
+            } else if (entry instanceof ConfigurationSection section) {
+                result.add(SerializedObject.copyOf(section.getValues(false)));
+            }
+        }
+        return java.util.List.copyOf(result);
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.ascension.session.model;
 
+import com.ascension.effects.runtime.EffectContainer;
 import com.ascension.profiles.model.PlayerProfile;
-import com.ascension.session.runtime.ActiveEffectContainer;
 import com.ascension.session.runtime.SessionTaskContainer;
 import com.ascension.stats.attribute.AttributeContainer;
 import com.ascension.state.ContextVariables;
@@ -26,7 +26,7 @@ public final class PlayerSession {
     private final StateMachine<SessionCombatState> combatState;
     private final AttributeContainer attributes;
     private final ContextVariables runtimeAttributes;
-    private final ActiveEffectContainer activeEffects;
+    private final EffectContainer activeEffects;
     private final SessionTaskContainer activeTasks;
     private final CooldownContainer cooldowns;
     private final RuntimeFlagContainer runtimeFlags;
@@ -48,7 +48,7 @@ public final class PlayerSession {
         this.combatState = new StateMachine<>(SessionCombatState.IDLE, (current, next) -> true);
         this.attributes = Objects.requireNonNull(attributes, "attributes");
         this.runtimeAttributes = new ContextVariables();
-        this.activeEffects = new ActiveEffectContainer();
+        this.activeEffects = new EffectContainer();
         this.activeTasks = new SessionTaskContainer();
         this.cooldowns = new CooldownContainer();
         this.runtimeFlags = new RuntimeFlagContainer();
@@ -88,7 +88,7 @@ public final class PlayerSession {
         return this.runtimeAttributes;
     }
 
-    public ActiveEffectContainer activeEffects() {
+    public EffectContainer activeEffects() {
         return this.activeEffects;
     }
 

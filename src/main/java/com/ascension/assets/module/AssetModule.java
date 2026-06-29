@@ -152,6 +152,14 @@ public final class AssetModule extends AbstractModule {
             AscensionRegistries.NPC_DEFINITIONS,
             NpcDefinition::new
         ));
+        assetService.registerType(new AssetType<>(
+            AssetConfigurationDescriptors.OWNER,
+            "effects",
+            "effects",
+            AscensionRegistries.EFFECT_DEFINITIONS,
+            new com.ascension.effects.definition.EffectDefinitionSerializer(),
+            Validator.noop()
+        ));
         return localization;
     }
 

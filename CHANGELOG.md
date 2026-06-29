@@ -21,3 +21,4 @@
 - Added default asset configuration files and a bundled seed localization asset.
 - Implemented Phase 5 Item Engine foundation with item definition schemas, runtime item abstraction, and item registry services.
 - Implemented Phase 6 Equipment Engine foundation, including runtime slots, transactions, rule validation, event integration, and stat modifiers.
+- Implemented Phase 7 Effects Engine framework with `EffectService` managing effect lifecycles, configurable stacking behaviors, duration ticking, modifier application, and session integration.

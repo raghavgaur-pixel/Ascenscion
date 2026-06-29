@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 5: stat, attribute, and item foundation completed.
+Phase 7: Effects engine framework completed.
 
 ## Completed
 
@@ -38,6 +38,8 @@ Phase 5: stat, attribute, and item foundation completed.
 - Implemented a rollback-safe asset reload service with registry integration and dependency validation
 - Added a localization framework backed by translation bundle assets and typed localization settings
 - Added default asset and localization directory scaffolding plus bundled seed localization data
+- Added equipment engine with separation of concerns from the item engine
+- Implemented the Effects Engine, introducing an abstract `EffectService` managing generic gameplay effect lifecycles, duration ticking, modifier scaling, and automatic teardown on player disconnect.
 
 ## Not Started
 
@@ -53,4 +55,4 @@ Phase 5: stat, attribute, and item foundation completed.
 
 ## Next Implementation Step
 
-Phase 6: combat and ability engine foundation
+Phase 8: combat and ability engine foundation
