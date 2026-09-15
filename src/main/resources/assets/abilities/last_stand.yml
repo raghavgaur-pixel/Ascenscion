@@ -1,0 +1,15 @@
+id: ascension:last_stand
+version: 1.0.0
+display_name: Last Stand
+description: The Warden's final phase empowerment, increasing pressure as the encounter approaches its end.
+metadata:
+  category: boss
+  tier: 1
+target: SELF
+cost: {}
+cooldown_millis: 20000
+data:
+  behavior: apply_effect
+  effect: ascension:warden_enraged
+  duration_millis: 30000
+  tags: [boss, enrage, final_phase]
