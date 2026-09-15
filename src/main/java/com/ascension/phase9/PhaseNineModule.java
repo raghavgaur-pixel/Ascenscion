@@ -28,6 +28,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.Command;
 import org.jetbrains.annotations.NotNull;
+import net.kyori.adventure.text.Component;
 
 /** Wires Phase 9 gameplay, the quest journal, and the live Floor 1 slice. */
 public final class PhaseNineModule extends AbstractModule {
@@ -61,12 +62,12 @@ public final class PhaseNineModule extends AbstractModule {
         events.subscribe("phase-9", PlayerReadyEvent.class, EventPriority.NORMAL, false, event -> initializeFloorOnePlayer(event.session().profile().map(profile -> profile.uniqueId()).orElse(null), quests, tower, floorWorld, services));
 
         plugin.getServer().getPluginManager().registerEvents(new Listener() {
-            @EventHandler
-            public void onJoin(final PlayerJoinEvent event) {
-                plugin.getServer().getScheduler().runTaskLater(plugin, () -> initializeFloorOnePlayer(event.getPlayer().getUniqueId(), quests, tower, floorWorld, services), 20L);
-            }
+            @EventHandler public void onJoin(final PlayerJoinEvent event) { plugin.getServer().getScheduler().runTaskLater(plugin, () -> initializeFloorOnePlayer(event.getPlayer().getUniqueId(), quests, tower, floorWorld, services), 20L); }
         }, plugin);
+
         registerCommand(services, new PhaseNineCommand(quests, mobs, services.require(PlayerSessionManager.class), tower, journal));
+        final var questsCommand = plugin.getCommand("quests");
+        if (questsCommand != null) questsCommand.setExecutor((sender, command, label, args) -> { if (sender instanceof Player player) { journal.open(player); return true; } sender.sendMessage(Component.text("This command requires a player.")); return true; });
     }
 
     private static void initializeFloorOnePlayer(final java.util.UUID playerId, final QuestService quests, final TowerService tower, final FloorOneWorldService floorWorld, final ServiceRegistry services) {
@@ -83,22 +84,10 @@ public final class PhaseNineModule extends AbstractModule {
         services.require(PlayerProfileService.class).save(playerId);
     }
 
-    @Override protected void onStop(final ServiceRegistry services) {
-        services.find(FloorOneWorldService.class).ifPresent(FloorOneWorldService::stop);
-        services.find(EventBus.class).ifPresent(events -> events.unsubscribeOwner("phase-9"));
-        services.find(MobService.class).ifPresent(MobService::clear);
-    }
+    @Override protected void onStop(final ServiceRegistry services) { services.find(FloorOneWorldService.class).ifPresent(FloorOneWorldService::stop); services.find(EventBus.class).ifPresent(events -> events.unsubscribeOwner("phase-9")); services.find(MobService.class).ifPresent(MobService::clear); }
 
     private static void registerCommand(final ServiceRegistry services, final PhaseNineCommand phaseCommand) {
-        final JavaPlugin plugin = services.require(JavaPlugin.class);
-        final var command = plugin.getCommand("asc");
-        if (command == null) return;
-        final CommandExecutor previous = command.getExecutor();
-        command.setExecutor(new CommandExecutor() {
-            @Override public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
-                if (phaseCommand.handles(args)) return phaseCommand.onCommand(sender, cmd, label, args);
-                return previous != null && previous.onCommand(sender, cmd, label, args);
-            }
-        });
+        final JavaPlugin plugin = services.require(JavaPlugin.class); final var command = plugin.getCommand("asc"); if (command == null) return; final CommandExecutor previous = command.getExecutor();
+        command.setExecutor(new CommandExecutor() { @Override public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) { if (phaseCommand.handles(args)) return phaseCommand.onCommand(sender, cmd, label, args); return previous != null && previous.onCommand(sender, cmd, label, args); } });
     }
 }
