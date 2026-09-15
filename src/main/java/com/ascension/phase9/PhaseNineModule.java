@@ -20,6 +20,9 @@ import com.ascension.tower.model.FloorId;
 import com.ascension.tower.service.TowerService;
 import java.util.Set;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -56,20 +59,45 @@ public final class PhaseNineModule extends AbstractModule {
         final GameplayCombatListener combatListener = new GameplayCombatListener(quests, registries, services);
         events.subscribe("phase-9", com.ascension.combat.event.EntityKilledEvent.class, EventPriority.NORMAL, false, combatListener::onKilled);
         events.subscribe("phase-9", PlayerReadyEvent.class, EventPriority.NORMAL, false, event -> {
-            final var profile = event.session().profile().orElse(null);
-            if (profile == null) return;
-            final var floors = profile.components().find("unlocked_floors").map(UnlockedFloorsProfileComponent.class::cast).orElse(null);
-            if (floors != null && tower.unlock(floors, new FloorId("ascension:floor_001")).status() != TowerService.UnlockResult.Status.REJECTED) {
-                quests.accept(profile.uniqueId(), "ascension:arrival");
-            }
-            final Player player = org.bukkit.Bukkit.getPlayer(profile.uniqueId());
-            if (player != null) {
-                floorWorld.preparePlayer(player);
-                if (quests.active(player.getUniqueId()).contains("ascension:first_hunt")) floorWorld.ensureHuntMobs();
-            }
-            services.require(PlayerProfileService.class).save(profile.uniqueId());
+            initializeFloorOnePlayer(event.session().profile().map(profile -> profile.uniqueId()).orElse(null), quests, tower, floorWorld, services);
         });
+
+        final JavaPlugin plugin = services.require(JavaPlugin.class);
+        plugin.getServer().getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onJoin(final PlayerJoinEvent event) {
+                plugin.getServer().getScheduler().runTaskLater(plugin, () ->
+                    initializeFloorOnePlayer(event.getPlayer().getUniqueId(), quests, tower, floorWorld, services), 20L);
+            }
+        }, plugin);
+
         registerCommand(services, new PhaseNineCommand(quests, mobs, services.require(PlayerSessionManager.class), tower));
+    }
+
+    private static void initializeFloorOnePlayer(
+        final java.util.UUID playerId,
+        final QuestService quests,
+        final TowerService tower,
+        final FloorOneWorldService floorWorld,
+        final ServiceRegistry services
+    ) {
+        if (playerId == null) return;
+        final var profile = services.require(PlayerProfileService.class).online(playerId).orElse(null);
+        final Player player = org.bukkit.Bukkit.getPlayer(playerId);
+        if (profile == null || player == null || !player.isOnline()) return;
+
+        final var floors = profile.components().find("unlocked_floors")
+            .map(UnlockedFloorsProfileComponent.class::cast).orElse(null);
+        if (floors != null) tower.unlock(floors, new FloorId("ascension:floor_001"));
+
+        quests.accept(playerId, "ascension:arrival");
+        quests.grantStarterItems(playerId);
+        floorWorld.preparePlayer(player);
+
+        if (quests.active(playerId).contains("ascension:first_hunt")) {
+            floorWorld.ensureHuntMobs();
+        }
+        services.require(PlayerProfileService.class).save(playerId);
     }
 
     @Override
