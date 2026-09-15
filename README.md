@@ -2,33 +2,21 @@
 
 Ascension is a production-oriented Paper plugin intended to power a large-scale Minecraft MMORPG centered on climbing a multi-world tower.
 
-This repository is being built in strict subsystem order. Phase 1 establishes architecture, project structure, build configuration, and the foundational runtime framework. Gameplay systems are intentionally deferred until the foundation is stable.
+## Floor 1 playable slice
+
+The current development branch contains the authored Floor 1 gameplay slice: Haven, wilderness, First Gate, persistent quest progression, quest journal, starter equipment, and vanilla-model combat placeholders.
 
 ## Technology Baseline
 
-- Java 21-26
+- Java 21
 - Maven
-- Paper API
+- Paper 1.21.1 API
 - Adventure API
 - SQLite for development
 - PostgreSQL for production
 
-## Current Scope
-
-- Clean Architecture project baseline
-- Modular runtime bootstrap
-- Lightweight dependency injection container
-- Configuration loading framework
-- Lifecycle and module orchestration
-- Integration boundaries for external plugins
-
 ## Build
 
-The project uses Maven:
-
 ```bash
-mvn clean package
+mvn clean verify
 ```
-
-The current execution environment for this session does not include `mvn`, so build verification must be performed once Maven is available locally or in CI.
-
