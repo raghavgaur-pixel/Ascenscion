@@ -1,0 +1,18 @@
+id: ascension:gatebreaker
+version: 1.0.0
+display_name: Gatebreaker
+description: A telegraphed heavy blow used by the Warden of the First Gate.
+metadata:
+  category: boss
+  tier: 1
+target: SINGLE_ENTITY
+cost: {}
+cooldown_millis: 4500
+data:
+  behavior: physical_attack
+  damage:
+    base: 34.0
+    scaling:
+      attack_damage: 1.0
+  tags: [boss, telegraphed, heavy]
+  windup_ticks: 18
