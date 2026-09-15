@@ -44,20 +44,37 @@ public final class PhaseNineModule extends AbstractModule {
         final BukkitAbilityRuntimeGateway runtime = (BukkitAbilityRuntimeGateway) services.require(com.ascension.abilities.service.AbilityRuntimeGateway.class);
         final JavaPlugin plugin = services.require(JavaPlugin.class);
         final MobService mobs = new MobService(registries, runtime, plugin);
+
+        final PremiumFloorOneBuilder premiumBuilder = new PremiumFloorOneBuilder(plugin);
+        premiumBuilder.prepareFreshWorld();
+
         final FloorOneWorldService floorWorld = new FloorOneWorldService(plugin, quests, mobs, services.require(AbilityService.class), services.require(ItemService.class), services.require(ItemMetadataEncoder.class), journal);
-        services.register(ProgressionService.class, progression); services.register(TowerService.class, tower); services.register(QuestService.class, quests); services.register(MobService.class, mobs); services.register(QuestMenuService.class, journal); services.register(FloorOneWorldService.class, floorWorld);
+        services.register(ProgressionService.class, progression);
+        services.register(TowerService.class, tower);
+        services.register(QuestService.class, quests);
+        services.register(MobService.class, mobs);
+        services.register(QuestMenuService.class, journal);
+        services.register(FloorOneWorldService.class, floorWorld);
+
         plugin.getServer().getPluginManager().registerEvents(journal, plugin);
         floorWorld.start();
+        premiumBuilder.build();
+
         final EventBus events = services.require(EventBus.class);
         final GameplayCombatListener combatListener = new GameplayCombatListener(quests, registries, services);
         events.subscribe("phase-9", com.ascension.combat.event.EntityKilledEvent.class, EventPriority.NORMAL, false, combatListener::onKilled);
-        events.subscribe("phase-9", PlayerReadyEvent.class, EventPriority.NORMAL, false, event -> initializeFloorOnePlayer(event.session().profile().map(profile -> profile.uniqueId()).orElse(null), quests, tower, floorWorld, services));
+        events.subscribe("phase-9", PlayerReadyEvent.class, EventPriority.NORMAL, false,
+            event -> initializeFloorOnePlayer(event.session().profile().map(profile -> profile.uniqueId()).orElse(null), quests, tower, floorWorld, services));
         plugin.getServer().getPluginManager().registerEvents(new Listener() {
             @EventHandler public void onJoin(final PlayerJoinEvent event) { bootstrapRetry(plugin, event.getPlayer(), quests, tower, floorWorld, services, 0); }
         }, plugin);
         registerCommand(services, new PhaseNineCommand(quests, mobs, services.require(PlayerSessionManager.class), tower, journal));
         final var questsCommand = plugin.getCommand("quests");
-        if (questsCommand != null) questsCommand.setExecutor((sender, command, label, args) -> { if (sender instanceof Player player) { journal.open(player); return true; } sender.sendMessage(Component.text("This command requires a player.")); return true; });
+        if (questsCommand != null) questsCommand.setExecutor((sender, command, label, args) -> {
+            if (sender instanceof Player player) { journal.open(player); return true; }
+            sender.sendMessage(Component.text("This command requires a player."));
+            return true;
+        });
     }
 
     private static void bootstrapRetry(final JavaPlugin plugin, final Player player, final QuestService quests, final TowerService tower, final FloorOneWorldService floorWorld, final ServiceRegistry services, final int attempt) {
@@ -84,10 +101,22 @@ public final class PhaseNineModule extends AbstractModule {
         return true;
     }
 
-    @Override protected void onStop(final ServiceRegistry services) { services.find(FloorOneWorldService.class).ifPresent(FloorOneWorldService::stop); services.find(EventBus.class).ifPresent(events -> events.unsubscribeOwner("phase-9")); services.find(MobService.class).ifPresent(MobService::clear); }
+    @Override protected void onStop(final ServiceRegistry services) {
+        services.find(FloorOneWorldService.class).ifPresent(FloorOneWorldService::stop);
+        services.find(EventBus.class).ifPresent(events -> events.unsubscribeOwner("phase-9"));
+        services.find(MobService.class).ifPresent(MobService::clear);
+    }
 
     private static void registerCommand(final ServiceRegistry services, final PhaseNineCommand phaseCommand) {
-        final JavaPlugin plugin = services.require(JavaPlugin.class); final var command = plugin.getCommand("asc"); if (command == null) return; final CommandExecutor previous = command.getExecutor();
-        command.setExecutor(new CommandExecutor() { @Override public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) { if (phaseCommand.handles(args)) return phaseCommand.onCommand(sender, cmd, label, args); return previous != null && previous.onCommand(sender, cmd, label, args); } });
+        final JavaPlugin plugin = services.require(JavaPlugin.class);
+        final var command = plugin.getCommand("asc");
+        if (command == null) return;
+        final CommandExecutor previous = command.getExecutor();
+        command.setExecutor(new CommandExecutor() {
+            @Override public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+                if (phaseCommand.handles(args)) return phaseCommand.onCommand(sender, cmd, label, args);
+                return previous != null && previous.onCommand(sender, cmd, label, args);
+            }
+        });
     }
 }
