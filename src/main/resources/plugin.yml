@@ -14,4 +14,12 @@ softdepend:
   - ProtocolLib
   - Citizens
   - MythicMobs
-
+commands:
+  asc:
+    description: Ascension development and gameplay command root.
+    usage: /asc <subcommand>
+    permission: ascension.command
+permissions:
+  ascension.command:
+    description: Allows use of Ascension commands.
+    default: op
