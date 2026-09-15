@@ -1,0 +1,16 @@
+id: ascension:arrival
+version: 1.0.0
+display_name: Arrival
+description: Learn how the first floor works and meet the people who will guide your first steps.
+metadata:
+  tier: 1
+  story: opening
+data:
+  objectives:
+    - type: talk_to_npc
+      npc: ascension:warden_lyra
+  rewards:
+    experience: 50
+    currency:
+      ascent_tokens: 1
+  follow_up: ascension:first_hunt
