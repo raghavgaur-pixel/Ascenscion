@@ -1,0 +1,21 @@
+id: ascension:warden_enraged
+version: 1.0.0
+display_name: Warden Enraged
+description: The Warden's final-phase empowerment.
+metadata:
+  category: boss_enrage
+category: BUFF
+duration_type: TIMED
+base_duration_ms: 30000
+stacking_behavior: REPLACE_EXISTING
+max_stacks: 1
+modifiers:
+  - stat: ascension:attack_power
+    operation: MULTIPLY
+    value: 0.35
+  - stat: ascension:attack_speed
+    operation: MULTIPLY
+    value: 0.20
+  - stat: ascension:movement_speed
+    operation: MULTIPLY
+    value: 0.10
