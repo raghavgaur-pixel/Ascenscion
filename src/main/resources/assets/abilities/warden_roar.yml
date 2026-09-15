@@ -1,0 +1,16 @@
+id: ascension:warden_roar
+version: 1.0.0
+display_name: Warden Roar
+description: A battlefield-wide roar that applies a short combat penalty to nearby adventurers.
+metadata:
+  category: boss
+  tier: 1
+target: AREA
+cost: {}
+cooldown_millis: 12000
+data:
+  behavior: apply_effect
+  radius: 12.0
+  effect: ascension:shaken
+  duration_millis: 5000
+  tags: [boss, control, phase_transition]
