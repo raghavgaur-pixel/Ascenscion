@@ -25,7 +25,7 @@ public final class EquipmentModule extends AbstractModule {
 
     @Override
     public Set<String> dependencies() {
-        return Set.of("runtime-engine", "sessions", "items", "stats");
+        return Set.of("runtime-engine", "session", "items", "stats");
     }
 
     @Override
