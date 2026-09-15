@@ -73,7 +73,7 @@ public final class DefaultAbilityService implements AbilityService {
         }
 
         final AbilityDefinition definition = optionalDefinition.get();
-        final String validatorFailure = this.validate(request);
+        final String validatorFailure = this.validate(request, definition);
         if (validatorFailure != null) {
             return AbilityResult.rejected(validatorFailure);
         }
@@ -152,18 +152,43 @@ public final class DefaultAbilityService implements AbilityService {
         this.cooldowns.clear(Objects.requireNonNull(actorId, "actorId"));
     }
 
-    private String validate(final AbilityRequest request) {
-        final AbilityDefinition definition = this.definition(request.abilityId()).orElse(null);
-        if (definition == null) {
-            return "Unknown ability";
-        }
-
+    private String validate(final AbilityRequest request, final AbilityDefinition definition) {
         final AbilityTargetType targetType = definition.targetType();
-        if (targetType == AbilityTargetType.SINGLE_ENTITY && request.targetId() == null) {
-            return "A target is required";
-        }
-        if (targetType == AbilityTargetType.NONE && request.targetId() != null) {
-            return "This ability does not accept a target";
+        final boolean hasEntityTarget = request.targetId() != null;
+        final boolean hasPointTarget = request.targetPoint() != null;
+
+        switch (targetType) {
+            case SINGLE_ENTITY -> {
+                if (!hasEntityTarget) {
+                    return "A target entity is required";
+                }
+                if (hasPointTarget) {
+                    return "Single-entity abilities cannot receive a point target";
+                }
+            }
+            case GROUND -> {
+                if (!hasPointTarget) {
+                    return "A ground position is required";
+                }
+                if (hasEntityTarget) {
+                    return "Ground abilities cannot receive an entity target";
+                }
+            }
+            case AREA, CONE, LINE, PROJECTILE -> {
+                if (!hasEntityTarget && !hasPointTarget) {
+                    return "An entity or point target is required";
+                }
+            }
+            case SELF -> {
+                if (hasPointTarget) {
+                    return "Self abilities cannot receive a point target";
+                }
+            }
+            case NONE -> {
+                if (hasEntityTarget || hasPointTarget) {
+                    return "This ability does not accept a target";
+                }
+            }
         }
 
         for (final AbilityValidator validator : List.copyOf(this.validators)) {
