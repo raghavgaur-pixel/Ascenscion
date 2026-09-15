@@ -24,6 +24,7 @@ public final class DefaultAbilityService implements AbilityService {
 
     private final Registry<AssetId, AbilityDefinition> definitions;
     private final AbilityExecutorRegistry executors;
+    private final AbilityBehaviorRegistry behaviorExecutors;
     private final ResourceGateway resources;
     private final CooldownTracker cooldowns;
     private final LongSupplier clockMillis;
@@ -36,7 +37,7 @@ public final class DefaultAbilityService implements AbilityService {
         final ResourceGateway resources,
         final CooldownTracker cooldowns
     ) {
-        this(definitions, executors, resources, cooldowns, System::currentTimeMillis);
+        this(definitions, executors, new AbilityBehaviorRegistry(), resources, cooldowns, System::currentTimeMillis);
     }
 
     public DefaultAbilityService(
@@ -46,8 +47,30 @@ public final class DefaultAbilityService implements AbilityService {
         final CooldownTracker cooldowns,
         final LongSupplier clockMillis
     ) {
+        this(definitions, executors, new AbilityBehaviorRegistry(), resources, cooldowns, clockMillis);
+    }
+
+    public DefaultAbilityService(
+        final Registry<AssetId, AbilityDefinition> definitions,
+        final AbilityExecutorRegistry executors,
+        final AbilityBehaviorRegistry behaviorExecutors,
+        final ResourceGateway resources,
+        final CooldownTracker cooldowns
+    ) {
+        this(definitions, executors, behaviorExecutors, resources, cooldowns, System::currentTimeMillis);
+    }
+
+    public DefaultAbilityService(
+        final Registry<AssetId, AbilityDefinition> definitions,
+        final AbilityExecutorRegistry executors,
+        final AbilityBehaviorRegistry behaviorExecutors,
+        final ResourceGateway resources,
+        final CooldownTracker cooldowns,
+        final LongSupplier clockMillis
+    ) {
         this.definitions = Objects.requireNonNull(definitions, "definitions");
         this.executors = Objects.requireNonNull(executors, "executors");
+        this.behaviorExecutors = Objects.requireNonNull(behaviorExecutors, "behaviorExecutors");
         this.resources = Objects.requireNonNull(resources, "resources");
         this.cooldowns = Objects.requireNonNull(cooldowns, "cooldowns");
         this.clockMillis = Objects.requireNonNull(clockMillis, "clockMillis");
@@ -78,7 +101,7 @@ public final class DefaultAbilityService implements AbilityService {
             return AbilityResult.rejected(validatorFailure);
         }
 
-        final AbilityExecutor executor = this.executors.find(abilityId).orElse(null);
+        final AbilityExecutor executor = resolveExecutor(abilityId, definition);
         if (executor == null) {
             return AbilityResult.rejected("Ability behavior is not registered: " + abilityId);
         }
@@ -150,6 +173,15 @@ public final class DefaultAbilityService implements AbilityService {
      */
     public void clearRuntime(final UUID actorId) {
         this.cooldowns.clear(Objects.requireNonNull(actorId, "actorId"));
+    }
+
+    private AbilityExecutor resolveExecutor(final AssetId abilityId, final AbilityDefinition definition) {
+        final Optional<AbilityExecutor> explicit = this.executors.find(abilityId);
+        if (explicit.isPresent()) {
+            return explicit.get();
+        }
+        final String behavior = definition.data().getString("behavior", "");
+        return this.behaviorExecutors.find(behavior).orElse(null);
     }
 
     private String validate(final AbilityRequest request, final AbilityDefinition definition) {
