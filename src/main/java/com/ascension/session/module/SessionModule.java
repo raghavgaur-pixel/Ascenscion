@@ -25,7 +25,7 @@ public final class SessionModule extends AbstractModule {
 
     @Override
     public String id() {
-        return "sessions";
+        return "session";
     }
 
     @Override
