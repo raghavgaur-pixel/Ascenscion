@@ -18,6 +18,7 @@ import com.ascension.tower.model.FloorId;
 import com.ascension.tower.service.TowerService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -65,10 +66,7 @@ public final class QuestService {
     public QuestDefinition definition(final String questIdValue) { final AssetId id = parseId(questIdValue); return id == null ? null : this.registries.getOrCreate(AscensionRegistries.QUEST_DEFINITIONS).find(id).orElse(null); }
     public int objectiveProgress(final UUID playerId, final String questId, final int index) { final PlayerProfile profile = onlineProfile(playerId); return profile == null ? 0 : state(profile).objectiveProgress(progressKey(questId, index)); }
 
-    public Result talkToNpc(final UUID playerId, final String npcId) {
-        if (LYRA_NPC.equals(npcId)) { accept(playerId, ARRIVAL_QUEST); grantStarterItems(playerId); }
-        return progress(playerId, ObjectiveMatcher.type("talk_to_npc").value(npcId));
-    }
+    public Result talkToNpc(final UUID playerId, final String npcId) { if (LYRA_NPC.equals(npcId)) { accept(playerId, ARRIVAL_QUEST); grantStarterItems(playerId); } return progress(playerId, ObjectiveMatcher.type("talk_to_npc").value(npcId)); }
     public Result reachLocation(final UUID playerId, final String location) { return progress(playerId, ObjectiveMatcher.type("reach_location").value(location)); }
     public Result defeat(final UUID playerId, final String entityId, final String bossId) { final Result mob = entityId == null ? Result.noop() : progress(playerId, ObjectiveMatcher.type("defeat").value(entityId)); final Result boss = bossId == null ? Result.noop() : progress(playerId, ObjectiveMatcher.type("defeat_boss").value(bossId)); return combine(mob, boss); }
 
