@@ -1,0 +1,19 @@
+id: ascension:power_slash
+version: 1.0.0
+display_name: Power Slash
+description: A committed heavy strike that trades cooldown for significantly higher impact.
+metadata:
+  category: weapon
+  tier: starter
+target: SINGLE_ENTITY
+cost:
+  mana: 15.0
+cooldown_millis: 5000
+data:
+  behavior: physical_attack
+  damage:
+    base: 24.0
+    scaling:
+      attack_damage: 1.35
+  animation:
+    duration_ticks: 8
