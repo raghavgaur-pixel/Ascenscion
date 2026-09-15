@@ -52,5 +52,19 @@
 - [x] Add item registry-backed runtime lookup and item builder services
 - [x] Phase 6: Equipment engine foundation
 - [x] Phase 7: Effects engine foundation
-- [x] Phase 8: combat engine foundation
-- [ ] Phase 9: ability and content systems
+- [x] Phase 8: Combat engine foundation
+
+## Phase 9: Ability And Content Systems
+
+- [~] Establish canonical stat vocabulary and immutable stat values
+- [~] Establish data-driven ability asset definition
+- [~] Establish ability request/result/service contracts
+- [ ] Implement ability registry integration and reload validation
+- [ ] Implement cooldown/resource enforcement
+- [ ] Implement targeting and execution pipeline
+- [ ] Integrate abilities with CombatService and EffectsService
+- [ ] Add persistent player progression: level, XP, and tower progression state
+- [ ] Define tower/floor runtime contracts and progression rules
+- [ ] Add first playable content pack: Floor 1, starter equipment, abilities, mobs, quests, and boss
+- [ ] Add automated unit/integration tests for the Phase 9 contracts
+- [ ] Add build verification and CI gate
