@@ -1,14 +1,15 @@
 package com.ascension.assets.module;
 
+import com.ascension.assets.definition.AbilityDefinition;
 import com.ascension.assets.definition.BossDefinition;
 import com.ascension.assets.definition.FloorDefinition;
 import com.ascension.assets.definition.ItemDefinition;
 import com.ascension.assets.definition.LootTableDefinition;
+import com.ascension.assets.definition.MobDefinition;
 import com.ascension.assets.definition.NpcDefinition;
 import com.ascension.assets.definition.ProfessionDefinition;
 import com.ascension.assets.definition.QuestDefinition;
 import com.ascension.assets.definition.SkillDefinition;
-import com.ascension.assets.definition.AbilityDefinition;
 import com.ascension.assets.loader.AssetFrameworkSettings;
 import com.ascension.assets.loader.AssetReloadResult;
 import com.ascension.assets.loader.AssetService;
@@ -113,6 +114,7 @@ public final class AssetModule extends AbstractModule {
         assetService.registerType(localization);
         assetService.registerType(genericType("skills", "skills", AscensionRegistries.SKILL_DEFINITIONS, SkillDefinition::new));
         assetService.registerType(genericType("bosses", "bosses", AscensionRegistries.BOSS_DEFINITIONS, BossDefinition::new));
+        assetService.registerType(genericType("mobs", "mobs", AscensionRegistries.MOB_DEFINITIONS, MobDefinition::new));
         assetService.registerType(genericType("floors", "floors", AscensionRegistries.FLOOR_DEFINITIONS, FloorDefinition::new));
         assetService.registerType(genericType("quests", "quests", AscensionRegistries.QUEST_DEFINITIONS, QuestDefinition::new));
         assetService.registerType(genericType("professions", "professions", AscensionRegistries.PROFESSION_DEFINITIONS, ProfessionDefinition::new));
