@@ -41,6 +41,18 @@ public final class SerializedObject {
         return SerializedObject.copyOf(copied);
     }
 
+    /**
+     * Deep-merges object values, allowing asset inheritance to override only selected fields.
+     */
+    public SerializedObject merge(final SerializedObject overrides) {
+        Objects.requireNonNull(overrides, "overrides");
+        final Map<String, Object> merged = new LinkedHashMap<>(this.values);
+        for (final Map.Entry<String, Object> entry : overrides.asMap().entrySet()) {
+            merged.put(entry.getKey(), mergeValue(merged.get(entry.getKey()), entry.getValue()));
+        }
+        return SerializedObject.copyOf(merged);
+    }
+
     public String getString(final String key, final String defaultValue) {
         final Object value = this.values.get(key);
         return value instanceof String stringValue ? stringValue : defaultValue;
