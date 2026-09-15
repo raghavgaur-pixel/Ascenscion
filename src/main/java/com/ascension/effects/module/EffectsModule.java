@@ -3,8 +3,6 @@ package com.ascension.effects.module;
 import com.ascension.assets.loader.AssetService;
 import com.ascension.core.module.AbstractModule;
 import com.ascension.core.service.ServiceRegistry;
-import com.ascension.effects.definition.EffectDefinition;
-import com.ascension.effects.definition.EffectDefinitionSerializer;
 import com.ascension.effects.listener.EffectSessionListener;
 import com.ascension.effects.service.DefaultEffectService;
 import com.ascension.effects.service.EffectService;
@@ -30,7 +28,7 @@ public final class EffectsModule extends AbstractModule {
 
     @Override
     public Set<String> dependencies() {
-        return Set.of("core", "runtime", "session", "registry", "assets");
+        return Set.of("core-infrastructure", "runtime-engine", "session", "registry", "assets");
     }
 
     @Override
@@ -41,18 +39,11 @@ public final class EffectsModule extends AbstractModule {
         final GameLoop gameLoop = services.require(GameLoop.class);
         final AssetService assetService = services.require(AssetService.class);
 
-        // Asset serializers and definitions are generally registered in AssetModule directly,
-        // but we can register dynamically if AssetService exposes it.
-        // Wait, AssetService does not expose `registerSerializer`.
-        // I will let AssetModule handle the AssetType creation.
-        // Let's remove this block since `assetService` doesn't have `registerSerializer`.
         registryHub.getOrCreateReloadable(AscensionRegistries.EFFECT_DEFINITIONS);
 
-        // Initialize service
         final DefaultEffectService effectService = new DefaultEffectService(registryHub, eventBus, sessionManager);
         services.register(EffectService.class, effectService);
 
-        // Register tickable for effect updates and expirations
         gameLoop.register(new TickTask(
             "effects",
             "effect_lifecycle_tick",
@@ -60,7 +51,6 @@ public final class EffectsModule extends AbstractModule {
             effectService
         ));
 
-        // Initialize listeners
         new EffectSessionListener(eventBus, effectService);
     }
 
