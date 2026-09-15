@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -38,15 +39,6 @@ public final class SerializedObject {
         final Map<String, Object> copied = new LinkedHashMap<>(this.values);
         copied.remove(Objects.requireNonNull(key, "key"));
         return SerializedObject.copyOf(copied);
-    }
-
-    public SerializedObject merge(final SerializedObject overrides) {
-        final Map<String, Object> merged = new LinkedHashMap<>(this.values);
-        for (final Map.Entry<String, Object> entry : overrides.asMap().entrySet()) {
-            final Object baseValue = merged.get(entry.getKey());
-            merged.put(entry.getKey(), mergeValue(baseValue, entry.getValue()));
-        }
-        return SerializedObject.copyOf(merged);
     }
 
     public String getString(final String key, final String defaultValue) {
@@ -85,6 +77,26 @@ public final class SerializedObject {
             return Boolean.parseBoolean(stringValue);
         }
         return defaultValue;
+    }
+
+    /**
+     * Returns a nested object when the stored value is a map-like configuration node.
+     */
+    public Optional<SerializedObject> getObject(final String key) {
+        final Object value = this.values.get(key);
+        if (value instanceof Map<?, ?> mapValue) {
+            final Map<String, Object> normalized = new LinkedHashMap<>();
+            for (final Map.Entry<?, ?> entry : mapValue.entrySet()) {
+                if (entry.getKey() != null) {
+                    normalized.put(entry.getKey().toString(), entry.getValue());
+                }
+            }
+            return Optional.of(SerializedObject.copyOf(normalized));
+        }
+        if (value instanceof ConfigurationSection section) {
+            return Optional.of(SerializedObject.copyOf(section.getValues(false)));
+        }
+        return Optional.empty();
     }
 
     public Map<String, Long> getLongMap(final String key) {
