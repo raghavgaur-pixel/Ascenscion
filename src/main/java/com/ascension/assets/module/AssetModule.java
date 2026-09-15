@@ -10,6 +10,7 @@ import com.ascension.assets.definition.NpcDefinition;
 import com.ascension.assets.definition.ProfessionDefinition;
 import com.ascension.assets.definition.QuestDefinition;
 import com.ascension.assets.definition.SkillDefinition;
+import com.ascension.assets.definition.TranslationBundleDefinition;
 import com.ascension.assets.loader.AssetFrameworkSettings;
 import com.ascension.assets.loader.AssetReloadResult;
 import com.ascension.assets.loader.AssetService;
