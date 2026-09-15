@@ -5,6 +5,7 @@ import com.ascension.assets.definition.BossDefinition;
 import com.ascension.assets.definition.FloorDefinition;
 import com.ascension.assets.definition.ItemDefinition;
 import com.ascension.assets.definition.LootTableDefinition;
+import com.ascension.assets.definition.MobDefinition;
 import com.ascension.assets.definition.NpcDefinition;
 import com.ascension.assets.definition.ProfessionDefinition;
 import com.ascension.assets.definition.QuestDefinition;
@@ -46,6 +47,9 @@ public final class AscensionRegistries {
 
     public static final RegistryDescriptor<AssetId, BossDefinition> BOSS_DEFINITIONS =
         new RegistryDescriptor<>("boss_definitions", AssetId.class, BossDefinition.class);
+
+    public static final RegistryDescriptor<AssetId, MobDefinition> MOB_DEFINITIONS =
+        new RegistryDescriptor<>("mob_definitions", AssetId.class, MobDefinition.class);
 
     public static final RegistryDescriptor<AssetId, FloorDefinition> FLOOR_DEFINITIONS =
         new RegistryDescriptor<>("floor_definitions", AssetId.class, FloorDefinition.class);
