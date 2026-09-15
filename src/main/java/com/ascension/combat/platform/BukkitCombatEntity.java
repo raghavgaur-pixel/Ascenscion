@@ -6,7 +6,6 @@ import com.ascension.effects.runtime.EffectContainer;
 import com.ascension.stats.attribute.AttributeContainer;
 import java.util.Objects;
 import java.util.UUID;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 
 /**
@@ -74,9 +73,9 @@ public final class BukkitCombatEntity implements CombatEntity {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public double maximum() {
-            final var attribute = this.entity.getAttribute(Attribute.MAX_HEALTH);
-            return attribute == null ? 20.0D : attribute.getValue();
+            return this.entity.getMaxHealth();
         }
 
         @Override
