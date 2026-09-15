@@ -10,6 +10,7 @@ import com.ascension.database.migration.SqlSchemaMigration;
 import com.ascension.profiles.component.AchievementsProfileComponentDefinition;
 import com.ascension.profiles.component.CurrencyProfileComponentDefinition;
 import com.ascension.profiles.component.ProfileComponentDefinition;
+import com.ascension.profiles.component.ProgressionProfileComponentDefinition;
 import com.ascension.profiles.component.SettingsProfileComponentDefinition;
 import com.ascension.profiles.component.StatisticsProfileComponentDefinition;
 import com.ascension.profiles.component.UnlockedFloorsProfileComponentDefinition;
@@ -81,6 +82,7 @@ public final class ProfileModule extends AbstractModule {
         final List<ProfileComponentDefinition<?>> definitions = List.of(
             new SettingsProfileComponentDefinition(),
             new UnlockedFloorsProfileComponentDefinition(),
+            new ProgressionProfileComponentDefinition(),
             new CurrencyProfileComponentDefinition(),
             new StatisticsProfileComponentDefinition(),
             new AchievementsProfileComponentDefinition()
