@@ -1,0 +1,15 @@
+id: ascension:warden_lyra
+version: 1.0.0
+display_name: Warden Lyra
+description: Haven's guide and the player's first contact with the Tower's progression system.
+metadata:
+  role: quest_giver
+  floor: 1
+data:
+  location: haven
+  dialogue:
+    greeting: arrival
+    progression: first_gate
+  quests:
+    - ascension:arrival
+    - ascension:the_first_gate
