@@ -1,0 +1,34 @@
+id: ascension:floor_001
+version: 1.0.0
+display_name: Floor 1 — The First Field
+description: The opening persistent region of the Ascension Tower.
+metadata:
+  tier: 1
+  region_type: persistent
+data:
+  order: 1
+  world: ascension_floor_001
+  recommended_level: 1
+  level_range: 1-10
+  entry_mode: persistent_region
+  spawn: town:haven
+  boss: ascension:warden_of_the_first_gate
+  next_floor: ascension:floor_002
+  progression:
+    unlock_next_on: boss_defeat
+  locations:
+    - haven
+    - whispering_woods
+    - old_road
+    - first_gate
+  content:
+    quests:
+      - ascension:arrival
+      - ascension:first_hunt
+      - ascension:the_first_gate
+    npcs:
+      - ascension:warden_lyra
+      - ascension:merchant_ren
+    enemies:
+      - ascension:forest_wolf
+      - ascension:iron_beetle
