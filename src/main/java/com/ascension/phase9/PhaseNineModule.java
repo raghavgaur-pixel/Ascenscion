@@ -30,13 +30,12 @@ import org.bukkit.command.Command;
 import org.jetbrains.annotations.NotNull;
 import net.kyori.adventure.text.Component;
 
-/** Wires Phase 9 gameplay, the quest journal, and the live Floor 1 slice. */
+/** Wires Phase 9 gameplay and the playable Floor 1 slice. */
 public final class PhaseNineModule extends AbstractModule {
     @Override public String id() { return "phase-9"; }
     @Override public Set<String> dependencies() { return Set.of("assets", "registry", "profiles", "session", "items", "equipment", "effects", "combat", "abilities"); }
 
-    @Override
-    protected void onStart(final ServiceRegistry services) {
+    @Override protected void onStart(final ServiceRegistry services) {
         final RegistryHub registries = services.require(RegistryHub.class);
         final ProgressionService progression = new ProgressionService(ExperienceCurve.polynomial(100L, 0.15D, 20L), 100);
         final TowerService tower = new TowerService(registries.require(AscensionRegistries.FLOOR_DEFINITIONS));
@@ -46,42 +45,44 @@ public final class PhaseNineModule extends AbstractModule {
         final JavaPlugin plugin = services.require(JavaPlugin.class);
         final MobService mobs = new MobService(registries, runtime, plugin);
         final FloorOneWorldService floorWorld = new FloorOneWorldService(plugin, quests, mobs, services.require(AbilityService.class), services.require(ItemService.class), services.require(ItemMetadataEncoder.class), journal);
-
-        services.register(ProgressionService.class, progression);
-        services.register(TowerService.class, tower);
-        services.register(QuestService.class, quests);
-        services.register(MobService.class, mobs);
-        services.register(QuestMenuService.class, journal);
-        services.register(FloorOneWorldService.class, floorWorld);
+        services.register(ProgressionService.class, progression); services.register(TowerService.class, tower); services.register(QuestService.class, quests); services.register(MobService.class, mobs); services.register(QuestMenuService.class, journal); services.register(FloorOneWorldService.class, floorWorld);
         plugin.getServer().getPluginManager().registerEvents(journal, plugin);
         floorWorld.start();
-
         final EventBus events = services.require(EventBus.class);
         final GameplayCombatListener combatListener = new GameplayCombatListener(quests, registries, services);
         events.subscribe("phase-9", com.ascension.combat.event.EntityKilledEvent.class, EventPriority.NORMAL, false, combatListener::onKilled);
         events.subscribe("phase-9", PlayerReadyEvent.class, EventPriority.NORMAL, false, event -> initializeFloorOnePlayer(event.session().profile().map(profile -> profile.uniqueId()).orElse(null), quests, tower, floorWorld, services));
-
         plugin.getServer().getPluginManager().registerEvents(new Listener() {
-            @EventHandler public void onJoin(final PlayerJoinEvent event) { plugin.getServer().getScheduler().runTaskLater(plugin, () -> initializeFloorOnePlayer(event.getPlayer().getUniqueId(), quests, tower, floorWorld, services), 20L); }
+            @EventHandler public void onJoin(final PlayerJoinEvent event) { bootstrapRetry(plugin, event.getPlayer(), quests, tower, floorWorld, services, 0); }
         }, plugin);
-
         registerCommand(services, new PhaseNineCommand(quests, mobs, services.require(PlayerSessionManager.class), tower, journal));
         final var questsCommand = plugin.getCommand("quests");
         if (questsCommand != null) questsCommand.setExecutor((sender, command, label, args) -> { if (sender instanceof Player player) { journal.open(player); return true; } sender.sendMessage(Component.text("This command requires a player.")); return true; });
     }
 
-    private static void initializeFloorOnePlayer(final java.util.UUID playerId, final QuestService quests, final TowerService tower, final FloorOneWorldService floorWorld, final ServiceRegistry services) {
-        if (playerId == null) return;
+    private static void bootstrapRetry(final JavaPlugin plugin, final Player player, final QuestService quests, final TowerService tower, final FloorOneWorldService floorWorld, final ServiceRegistry services, final int attempt) {
+        if (attempt == 0) { quests.grantStarterItems(player.getUniqueId()); floorWorld.preparePlayer(player); }
+        if (attempt >= 10 || !player.isOnline()) return;
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (!player.isOnline()) return;
+            boolean ready = initializeFloorOnePlayer(player.getUniqueId(), quests, tower, floorWorld, services);
+            if (!ready) bootstrapRetry(plugin, player, quests, tower, floorWorld, services, attempt + 1);
+        }, attempt == 0 ? 20L : 20L);
+    }
+
+    private static boolean initializeFloorOnePlayer(final java.util.UUID playerId, final QuestService quests, final TowerService tower, final FloorOneWorldService floorWorld, final ServiceRegistry services) {
+        if (playerId == null) return false;
         final var profile = services.require(PlayerProfileService.class).online(playerId).orElse(null);
         final Player player = org.bukkit.Bukkit.getPlayer(playerId);
-        if (profile == null || player == null || !player.isOnline()) return;
+        if (profile == null || player == null || !player.isOnline()) return false;
         final var floors = profile.components().find("unlocked_floors").map(UnlockedFloorsProfileComponent.class::cast).orElse(null);
         if (floors != null) tower.unlock(floors, new FloorId("ascension:floor_001"));
-        quests.accept(playerId, "ascension:arrival");
+        quests.accept(playerId, QuestService.ARRIVAL);
         quests.grantStarterItems(playerId);
         floorWorld.preparePlayer(player);
         floorWorld.ensureHuntMobs();
         services.require(PlayerProfileService.class).save(playerId);
+        return true;
     }
 
     @Override protected void onStop(final ServiceRegistry services) { services.find(FloorOneWorldService.class).ifPresent(FloorOneWorldService::stop); services.find(EventBus.class).ifPresent(events -> events.unsubscribeOwner("phase-9")); services.find(MobService.class).ifPresent(MobService::clear); }
