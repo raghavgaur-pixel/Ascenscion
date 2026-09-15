@@ -4,8 +4,8 @@ import com.ascension.core.cache.ConcurrentCache;
 import com.ascension.core.logging.PluginLogger;
 import com.ascension.core.module.AbstractModule;
 import com.ascension.core.service.ServiceRegistry;
-import com.ascension.database.migration.SchemaMigration;
 import com.ascension.database.migration.DatabaseMigrationService;
+import com.ascension.database.migration.SchemaMigration;
 import com.ascension.database.migration.SqlSchemaMigration;
 import com.ascension.profiles.component.AchievementsProfileComponentDefinition;
 import com.ascension.profiles.component.CurrencyProfileComponentDefinition;
@@ -34,8 +34,10 @@ public final class ProfileModule extends AbstractModule {
     @Override
     protected void onStart(final ServiceRegistry services) {
         final RegistryHub registryHub = services.require(RegistryHub.class);
-        final MutableRegistry<String, ProfileComponentDefinition<?>> componentRegistry = registryHub.getOrCreate(AscensionRegistries.PROFILE_COMPONENTS);
-        final MutableRegistry<String, SchemaMigration> migrationRegistry = registryHub.getOrCreate(AscensionRegistries.SCHEMA_MIGRATIONS);
+        final MutableRegistry<String, ProfileComponentDefinition<?>> componentRegistry =
+            registryHub.getOrCreate(AscensionRegistries.PROFILE_COMPONENTS);
+        final MutableRegistry<String, SchemaMigration> migrationRegistry =
+            registryHub.getOrCreate(AscensionRegistries.SCHEMA_MIGRATIONS);
         registerComponentDefinitions(componentRegistry);
         registerMigrations(migrationRegistry);
         services.require(DatabaseMigrationService.class).migrate().join();
@@ -60,9 +62,12 @@ public final class ProfileModule extends AbstractModule {
 
     private static void registerComponentDefinitions(final MutableRegistry<String, ProfileComponentDefinition<?>> componentRegistry) {
         final List<ProfileComponentDefinition<?>> definitions = List.of(
-            new SettingsProfileComponentDefinition(), new UnlockedFloorsProfileComponentDefinition(),
-            new ProgressionProfileComponentDefinition(), new CurrencyProfileComponentDefinition(),
-            new StatisticsProfileComponentDefinition(), new AchievementsProfileComponentDefinition(),
+            new SettingsProfileComponentDefinition(),
+            new UnlockedFloorsProfileComponentDefinition(),
+            new ProgressionProfileComponentDefinition(),
+            new CurrencyProfileComponentDefinition(),
+            new StatisticsProfileComponentDefinition(),
+            new AchievementsProfileComponentDefinition(),
             new QuestProgressProfileComponent.Definition()
         );
         for (final ProfileComponentDefinition<?> definition : definitions) {
@@ -72,20 +77,32 @@ public final class ProfileModule extends AbstractModule {
 
     private static void registerMigrations(final MutableRegistry<String, SchemaMigration> migrationRegistry) {
         final SchemaMigration migration = new SqlSchemaMigration(
-            "20260625_profile_tables", "Create player profile and profile component persistence tables.",
+            "20260625_profile_tables",
+            "Create player profile and profile component persistence tables.",
             List.of(
-                """CREATE TABLE IF NOT EXISTS player_profiles (
-                    player_id VARCHAR(36) PRIMARY KEY, username VARCHAR(32) NOT NULL,
-                    display_name VARCHAR(64) NOT NULL, first_join BIGINT NOT NULL,
-                    last_join BIGINT NOT NULL, playtime_seconds BIGINT NOT NULL
-                )""",
-                """CREATE TABLE IF NOT EXISTS profile_component_data (
-                    player_id VARCHAR(36) NOT NULL, component_id VARCHAR(128) NOT NULL,
-                    payload TEXT NOT NULL, updated_at BIGINT NOT NULL,
+                """
+                CREATE TABLE IF NOT EXISTS player_profiles (
+                    player_id VARCHAR(36) PRIMARY KEY,
+                    username VARCHAR(32) NOT NULL,
+                    display_name VARCHAR(64) NOT NULL,
+                    first_join BIGINT NOT NULL,
+                    last_join BIGINT NOT NULL,
+                    playtime_seconds BIGINT NOT NULL
+                )
+                """,
+                """
+                CREATE TABLE IF NOT EXISTS profile_component_data (
+                    player_id VARCHAR(36) NOT NULL,
+                    component_id VARCHAR(128) NOT NULL,
+                    payload TEXT NOT NULL,
+                    updated_at BIGINT NOT NULL,
                     PRIMARY KEY (player_id, component_id)
-                )""",
-                """CREATE INDEX IF NOT EXISTS idx_profile_component_data_player_id
-                   ON profile_component_data(player_id)"""
+                )
+                """,
+                """
+                CREATE INDEX IF NOT EXISTS idx_profile_component_data_player_id
+                ON profile_component_data(player_id)
+                """
             )
         );
         if (!migrationRegistry.contains(migration.id())) migrationRegistry.register(migration.id(), migration);
