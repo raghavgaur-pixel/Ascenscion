@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 9: Ability and content systems — runtime foundation in progress.
+Phase 9: Ability and content systems — **complete** on `phase-9-foundation`.
 
 ## Completed
 
@@ -21,7 +21,7 @@ Phase 9: Ability and content systems — runtime foundation in progress.
 - Added SQLite and PostgreSQL connection configuration support
 - Implemented schema migration tracking with automatic migration application
 - Implemented a modular player profile aggregate with component registration and structured component persistence
-- Implemented built-in persistent profile components for settings, unlocked floors, currencies, statistics, and achievements
+- Implemented built-in persistent profile components for settings, unlocked floors, currencies, statistics, achievements, and quest state
 - Implemented async player profile loading, online caching, and shutdown saves
 - Implemented an internal event bus with lifecycle event support, priority ordering, and listener isolation
 - Implemented a named runtime task framework with sync, async, delayed, repeating, and owner-scoped cleanup support
@@ -34,32 +34,40 @@ Phase 9: Ability and content systems — runtime foundation in progress.
 - Added a typed configuration framework with versioning, validation, default generation, and reload-safe ownership
 - Extended the registry framework with reloadable registries for hot-swappable definition sets
 - Implemented the asset framework with immutable asset metadata, typed asset groups, validation, inheritance, and duplicate detection
-- Added built-in definition groups for localization, items, skills, bosses, floors, quests, professions, loot tables, and NPCs
-- Implemented a rollback-safe asset reload service with registry integration and dependency validation
+- Added built-in definition groups for localization, items, skills, bosses, floors, quests, professions, loot tables, NPCs, mobs, abilities, and effects
+- Implemented rollback-safe asset reload with registry integration and dependency validation
 - Added a localization framework backed by translation bundle assets and typed localization settings
-- Added default asset and localization directory scaffolding plus bundled seed localization data
 - Added equipment engine with separation of concerns from the item engine
-- Implemented the Effects Engine, introducing an abstract EffectService managing generic gameplay effect lifecycles, duration ticking, modifier scaling, and automatic teardown on player disconnect
+- Implemented the Effects Engine with generic gameplay effect lifecycle management, duration ticking, modifier scaling, stacking, and teardown
 - Implemented the Combat Engine foundation with a deterministic attack/damage pipeline, typed damage sources and types, immutable combat snapshots, isolated health mutation, and internal combat events
-- Phase 9 foundation: canonical SAO-inspired stat vocabulary, immutable stat values/sets, data-driven ability definitions, and explicit ability request/result/service contracts
-- Phase 9 runtime foundation: executor boundary, executor registry, atomic resource gateway, runtime cooldown tracker, actor-scoped transactional ability service, and rollback on failed execution
-- Locked the core gameplay model: classless builds, dual progression, persistent tower floors, and high-stakes non-permanent death
+- Implemented Phase 9 canonical stat vocabulary and data-driven ability definitions
+- Implemented ability request/result/service contracts, cooldown/resource enforcement, actor-scoped serialization, and rollback on failed execution
+- Integrated authored abilities with CombatService and EffectsService
+- Added real area target resolution for live LivingEntity targets
+- Added persistent Ascension-side runtime state for non-player combatants
+- Added configurable mob/boss logical health and runtime spawning bridge
+- Added `/asc cast` support for any targeted LivingEntity
+- Added persistent player quest state with active/completed objectives and round-trip serialization
+- Added quest progression for NPC interaction, location reach, mob defeat, and boss defeat
+- Added quest reward handling for XP, currencies, items, and floor unlocks
+- Added combat-to-progression event bridge and automatic Floor 1 onboarding
+- Added starter equipment content, Floor 2 unlock target, and referenced loot tables
+- Added Phase 9 command surface for quest, mob, and floor vertical-slice testing
+- Added Phase 9 asset packaging and quest-state tests
+- Passed the GitHub Actions Maven/Java 21 build gate with all 17 tests green on the final Phase 9 head
 
 ## Not Started / In Progress
 
-- Targeting resolver and platform-safe targeting adapters
-- Ability content schema validation and built-in content pack
-- Player level/XP progression and derived stat formulas
-- Tower runtime progression and floor state
-- Dungeons, world events, quests, professions, guilds, parties, and economy
-- First complete playable floor vertical slice
-- Full integration/build verification in a Maven-enabled environment
+- Dungeons, world events, professions, guilds, parties, economy, and later-floor content
+- Production-grade mob AI/pathing and encounter orchestration
+- Full player-facing UI/menus and HUD systems
+- Additional tower floors beyond the Phase 9 Floor 2 unlock target
 
 ## Risks / Constraints
 
-- Local environment currently lacks `mvn`, so dependency-resolved compile verification is pending.
-- The repository is being developed on `phase-9-foundation` so changes can be reviewed before promotion to `main`.
+- `phase-9-foundation` remains the integration branch; `main` has not been promoted.
+- Phase 9 has a verified CI build/test gate, but actual live-server behavior still requires a Paper server integration run.
 
 ## Next Implementation Step
 
-Implement the ability targeting pipeline and bind successful ability execution to the existing CombatService/EffectsService contracts, then establish player level/XP and tower-floor progression as the next persistent gameplay layer.
+Phase 10 should build on this stable vertical slice with production mob AI, encounter state, player-facing quest/ability UI, loot resolution, and additional tower floors.
