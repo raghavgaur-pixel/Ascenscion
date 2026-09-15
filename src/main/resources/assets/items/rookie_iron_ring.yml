@@ -1,0 +1,13 @@
+id: ascension:rookie_iron_ring
+version: 1.0.0
+display_name: Rookie Iron Ring
+description: A simple ring carrying the faintest trace of tower-forged strength.
+metadata:
+  tier: 1
+  slot: ring
+  rarity: common
+data:
+  material: IRON_NUGGET
+stats:
+  ascension:dexterity: 2
+  ascension:strength: 1
