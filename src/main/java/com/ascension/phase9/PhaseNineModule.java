@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 /** Wires the first playable Phase 9 gameplay services and event bridges. */
 public final class PhaseNineModule extends AbstractModule {
     @Override public String id() { return "phase-9"; }
-    @Override public Set<String> dependencies() { return Set.of("assets", "registry", "profiles", "sessions", "items", "equipment", "effects", "combat", "abilities"); }
+    @Override public Set<String> dependencies() { return Set.of("assets", "registry", "profiles", "session", "items", "equipment", "effects", "combat", "abilities"); }
 
     @Override
     protected void onStart(final ServiceRegistry services) {
