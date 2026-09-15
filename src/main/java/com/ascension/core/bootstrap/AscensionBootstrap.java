@@ -1,5 +1,6 @@
 package com.ascension.core.bootstrap;
 
+import com.ascension.abilities.module.AbilityModule;
 import com.ascension.assets.module.AssetModule;
 import com.ascension.core.config.ConfigurationService;
 import com.ascension.core.config.YamlConfigurationService;
@@ -61,7 +62,8 @@ public final class AscensionBootstrap {
             new com.ascension.items.module.ItemModule(),
             new com.ascension.equipment.module.EquipmentModule(),
             new EffectsModule(),
-            new com.ascension.combat.module.CombatModule()
+            new com.ascension.combat.module.CombatModule(),
+            new AbilityModule()
         ));
 
         this.application = new AscensionApplication(logger, serviceRegistry, moduleManager);
