@@ -33,7 +33,7 @@ public final class AbilityModule extends AbstractModule {
 
     @Override
     public Set<String> dependencies() {
-        return Set.of("assets", "registry", "sessions", "stats", "effects", "combat");
+        return Set.of("assets", "registry", "session", "stats", "effects", "combat");
     }
 
     @Override
