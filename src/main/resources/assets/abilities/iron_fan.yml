@@ -1,0 +1,18 @@
+id: ascension:iron_fan
+version: 1.0.0
+display_name: Iron Fan
+description: A short-range area strike that punishes players who cluster around the Warden.
+metadata:
+  category: boss
+  tier: 1
+target: AREA
+cost: {}
+cooldown_millis: 7000
+data:
+  behavior: area_physical_attack
+  radius: 4.5
+  damage:
+    base: 18.0
+    scaling:
+      attack_damage: 0.75
+  tags: [boss, area, spacing]
