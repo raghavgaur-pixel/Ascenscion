@@ -14,5 +14,5 @@ data:
   damage:
     base: 18.0
     scaling:
-      attack_damage: 0.75
+      ascension:attack_power: 0.75
   tags: [boss, area, spacing]
