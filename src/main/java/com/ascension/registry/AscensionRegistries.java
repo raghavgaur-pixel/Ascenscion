@@ -1,5 +1,6 @@
 package com.ascension.registry;
 
+import com.ascension.assets.definition.AbilityDefinition;
 import com.ascension.assets.definition.BossDefinition;
 import com.ascension.assets.definition.FloorDefinition;
 import com.ascension.assets.definition.ItemDefinition;
@@ -12,8 +13,8 @@ import com.ascension.assets.loader.AssetType;
 import com.ascension.assets.localization.TranslationBundleDefinition;
 import com.ascension.assets.model.AssetId;
 import com.ascension.database.migration.SchemaMigration;
-import com.ascension.profiles.component.ProfileComponentDefinition;
 import com.ascension.effects.definition.EffectDefinition;
+import com.ascension.profiles.component.ProfileComponentDefinition;
 import com.ascension.stats.calculation.DerivedStatCalculatorFactory;
 import com.ascension.stats.definition.StatDefinition;
 
@@ -36,6 +37,9 @@ public final class AscensionRegistries {
 
     public static final RegistryDescriptor<AssetId, ItemDefinition> ITEM_DEFINITIONS =
         new RegistryDescriptor<>("item_definitions", AssetId.class, ItemDefinition.class);
+
+    public static final RegistryDescriptor<AssetId, AbilityDefinition> ABILITY_DEFINITIONS =
+        new RegistryDescriptor<>("ability_definitions", AssetId.class, AbilityDefinition.class);
 
     public static final RegistryDescriptor<AssetId, SkillDefinition> SKILL_DEFINITIONS =
         new RegistryDescriptor<>("skill_definitions", AssetId.class, SkillDefinition.class);
