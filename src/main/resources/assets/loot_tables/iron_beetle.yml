@@ -1,0 +1,12 @@
+id: ascension:iron_beetle
+version: 1.0.0
+display_name: Iron Beetle Loot
+description: Common armored salvage recovered from an Iron Beetle.
+metadata:
+  tier: 1
+data:
+  entries:
+    - item: ascension:rookie_iron_ring
+      weight: 7
+      min: 1
+      max: 1
