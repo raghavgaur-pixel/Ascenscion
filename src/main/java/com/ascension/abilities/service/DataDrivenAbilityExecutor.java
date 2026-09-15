@@ -1,14 +1,9 @@
 package com.ascension.abilities.service;
 
+import com.ascension.abilities.model.AbilityRequest;
 import com.ascension.assets.definition.AbilityDefinition;
 import com.ascension.assets.model.AssetId;
-import com.ascension.abilities.model.AbilityRequest;
-import com.ascension.combat.model.AttackContext;
 import com.ascension.combat.model.CombatEntity;
-import com.ascension.combat.model.CombatTarget;
-import com.ascension.combat.model.DamageContext;
-import com.ascension.combat.model.DamageSource;
-import com.ascension.combat.model.DefaultDamageType;
 import com.ascension.combat.model.HitResult;
 import com.ascension.effects.runtime.EffectContext;
 import com.ascension.effects.runtime.EffectSource;
@@ -76,8 +71,7 @@ public final class DataDrivenAbilityExecutor implements AbilityExecutor {
             return AbilityExecutionResult.rejected("Ability produced invalid damage");
         }
 
-        final AssetId abilityId = definition.id();
-        final HitResult result = this.runtime.attack(attacker.get(), target.get(), abilityId, damage);
+        final HitResult result = this.runtime.attack(attacker.get(), target.get(), definition.id(), damage);
         if (!result.isSuccess()) {
             return AbilityExecutionResult.rejected("Combat attack was cancelled");
         }
@@ -88,9 +82,12 @@ public final class DataDrivenAbilityExecutor implements AbilityExecutor {
         final AbilityRequest request,
         final AbilityDefinition definition
     ) {
-        final String effectIdValue = definition.data().getString("effect_id", "");
+        final String effectIdValue = definition.data().getString(
+            "effect_id",
+            definition.data().getString("effect", "")
+        );
         if (effectIdValue.isBlank()) {
-            return AbilityExecutionResult.rejected("Effect behavior requires effect_id");
+            return AbilityExecutionResult.rejected("Effect behavior requires effect or effect_id");
         }
         if (request.targetId() == null) {
             return AbilityExecutionResult.rejected("Effect behavior requires an entity target");
