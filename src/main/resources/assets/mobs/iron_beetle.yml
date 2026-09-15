@@ -5,8 +5,11 @@ description: A slow armored creature found near the old road.
 metadata:
   tier: 1
   role: armored_mob
+  model_source: vanilla_spider_placeholder
+  future_model: custom_resource_pack
+  data_model: combat_runtime
 data:
-  entity_type: SILVERFISH
+  entity_type: SPIDER
   level: 4
   health: 95.0
   defense: 18.0
