@@ -19,6 +19,4 @@ data:
     experience: 150
     currency:
       ascent_tokens: 1
-    items:
-      - ascension:rookie_sword
   follow_up: ascension:the_first_gate

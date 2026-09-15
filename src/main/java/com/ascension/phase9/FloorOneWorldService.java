@@ -5,7 +5,6 @@ import com.ascension.abilities.service.AbilityService;
 import com.ascension.assets.model.AssetId;
 import com.ascension.items.meta.ItemMetadataEncoder;
 import com.ascension.items.service.ItemService;
-import com.ascension.profiles.service.PlayerProfileService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +18,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -35,14 +35,11 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** Provisions and runs the self-contained playable Floor 1 vertical slice. */
+/** Self-contained playable Floor 1 world, NPC, mob, quest, and combat bridge. */
 public final class FloorOneWorldService implements Listener {
-
     public static final String WORLD_NAME = "ascension_floor_001";
-
     private static final String NPC_LYRA = "ascension:warden_lyra";
     private static final String NPC_REN = "ascension:merchant_ren";
-    private static final String QUEST_ARRIVAL = "ascension:arrival";
     private static final String QUEST_FIRST_HUNT = "ascension:first_hunt";
     private static final String QUEST_FIRST_GATE = "ascension:the_first_gate";
     private static final String MOB_WOLF = "ascension:forest_wolf";
@@ -55,11 +52,9 @@ public final class FloorOneWorldService implements Listener {
     private final AbilityService abilities;
     private final ItemService items;
     private final ItemMetadataEncoder itemEncoder;
-    private final PlayerProfileService profiles;
     private final NamespacedKey npcKey;
     private final NamespacedKey enteredKey;
     private final Path buildMarker;
-
     private World world;
     private boolean shuttingDown;
 
@@ -69,8 +64,7 @@ public final class FloorOneWorldService implements Listener {
         final MobService mobs,
         final AbilityService abilities,
         final ItemService items,
-        final ItemMetadataEncoder itemEncoder,
-        final PlayerProfileService profiles
+        final ItemMetadataEncoder itemEncoder
     ) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.quests = Objects.requireNonNull(quests, "quests");
@@ -78,7 +72,6 @@ public final class FloorOneWorldService implements Listener {
         this.abilities = Objects.requireNonNull(abilities, "abilities");
         this.items = Objects.requireNonNull(items, "items");
         this.itemEncoder = Objects.requireNonNull(itemEncoder, "itemEncoder");
-        this.profiles = Objects.requireNonNull(profiles, "profiles");
         this.npcKey = new NamespacedKey(plugin, "npc_id");
         this.enteredKey = new NamespacedKey(plugin, "entered_floor_001");
         this.buildMarker = plugin.getDataFolder().toPath().resolve(".floor_001_provisioned");
@@ -110,18 +103,13 @@ public final class FloorOneWorldService implements Listener {
     public void preparePlayer(final Player player) {
         if (this.world == null || !player.isOnline()) return;
         final boolean entered = player.getPersistentDataContainer().has(this.enteredKey, PersistentDataType.BYTE);
-        if (!entered) {
-            giveStarterEquipment(player);
-            player.getPersistentDataContainer().set(this.enteredKey, PersistentDataType.BYTE, (byte) 1);
-            player.teleportAsync(spawnLocation()).thenAccept(success -> {
-                if (success && player.isOnline()) {
-                    player.sendTitle("Ascension Tower", "Floor 1 — The First Field", 10, 60, 20);
-                    player.sendMessage("Welcome to Haven. Speak to Warden Lyra to begin your climb.");
-                }
-            });
-            return;
-        }
-        if (player.getWorld().equals(this.world)) return;
+        if (entered || player.getWorld().equals(this.world)) return;
+        giveStarterEquipment(player);
+        player.getPersistentDataContainer().set(this.enteredKey, PersistentDataType.BYTE, (byte) 1);
+        player.teleport(spawnLocation());
+        player.setRespawnLocation(spawnLocation(), true);
+        player.sendTitle("Ascension Tower", "Floor 1 — The First Field", 10, 60, 20);
+        player.sendMessage("Welcome to Haven. Speak to Warden Lyra to begin your climb.");
     }
 
     public void ensureHuntMobs() {
@@ -129,7 +117,7 @@ public final class FloorOneWorldService implements Listener {
         int wolves = 0;
         int beetles = 0;
         for (final Entity entity : this.world.getEntities()) {
-            final var id = this.mobs.mobId(entity).map(AssetId::toString).orElse("");
+            final String id = this.mobs.mobId(entity).map(AssetId::toString).orElse("");
             if (MOB_WOLF.equals(id) && !entity.isDead()) wolves++;
             if (MOB_BEETLE.equals(id) && !entity.isDead()) beetles++;
         }
@@ -140,25 +128,23 @@ public final class FloorOneWorldService implements Listener {
         final Location[] beetleSpawns = {
             location(28, 65, 25), location(-28, 65, 28), location(20, 65, 39)
         };
-        for (int i = wolves; i < wolfSpawns.length; i++) {
-            this.mobs.spawnMob(AssetId.parse(MOB_WOLF), wolfSpawns[i]);
-        }
-        for (int i = beetles; i < beetleSpawns.length; i++) {
-            this.mobs.spawnMob(AssetId.parse(MOB_BEETLE), beetleSpawns[i]);
-        }
+        for (int i = wolves; i < wolfSpawns.length; i++) this.mobs.spawnMob(AssetId.parse(MOB_WOLF), wolfSpawns[i]);
+        for (int i = beetles; i < beetleSpawns.length; i++) this.mobs.spawnMob(AssetId.parse(MOB_BEETLE), beetleSpawns[i]);
     }
 
     public void ensureBoss() {
         if (this.world == null) return;
         for (final Entity entity : this.world.getEntities()) {
-            if (BOSS_WARDEN.equals(this.mobs.bossId(entity).map(AssetId::toString).orElse("")) && !entity.isDead()) return;
+            if (BOSS_WARDEN.equals(this.mobs.bossId(entity).map(AssetId::toString).orElse("") ) && !entity.isDead()) return;
         }
         final LivingEntity boss = this.mobs.spawnBoss(AssetId.parse(BOSS_WARDEN), location(0, 65, 60)).orElse(null);
         if (boss != null) {
             boss.setPersistent(true);
             boss.setGlowing(true);
             boss.setRemoveWhenFarAway(false);
-            boss.sendMessage("The gatekeeper awakens.");
+            boss.setCustomNameVisible(true);
+            boss.playEffect(EntityEffect.HURT);
+            this.plugin.getLogger().info("Spawned Floor 1 boss encounter.");
         }
     }
 
@@ -172,14 +158,14 @@ public final class FloorOneWorldService implements Listener {
         if (NPC_LYRA.equals(npc)) {
             final QuestService.Result result = this.quests.talkToNpc(player.getUniqueId(), NPC_LYRA);
             if (result.status() == QuestService.Status.SUCCESS) {
-                player.sendMessage("§6Warden Lyra§f: The Tower has chosen you. Begin with the creatures beyond Haven.");
-                player.sendMessage("§eQuest started: The First Hunt §7— Hunt 5 Forest Wolves and 3 Iron Beetles.");
+                player.sendMessage("§6Warden Lyra§f: The Tower has chosen you. Head into the field and prove you can survive.");
+                player.sendMessage("§eQuest started: The First Hunt §7— 5 Forest Wolves, 3 Iron Beetles.");
                 ensureHuntMobs();
             } else {
-                player.sendMessage("§6Warden Lyra§f: Keep your eyes on the road ahead, climber.");
+                player.sendMessage("§6Warden Lyra§f: Your path continues beyond Haven. Do not lose sight of the gate.");
             }
         } else if (NPC_REN.equals(npc)) {
-            player.sendMessage("§aMerchant Ren§f: Gear, supplies, and a long road upward. Stay alive out there.");
+            player.sendMessage("§aMerchant Ren§f: Your Rookie Sword is a start. Better gear will come as you climb.");
         }
     }
 
@@ -197,7 +183,7 @@ public final class FloorOneWorldService implements Listener {
         }
         final var result = this.abilities.execute(new AbilityRequest(player.getUniqueId(), "ascension:quick_strike", target.getUniqueId()));
         if (result.status() == com.ascension.abilities.model.AbilityResult.Status.SUCCESS) {
-            player.playEffect(EntityEffect.HURT);
+            target.playEffect(EntityEffect.HURT);
             player.sendActionBar("§cQuick Strike");
         } else if (!result.reason().contains("cooldown")) {
             player.sendActionBar("§7" + result.reason());
@@ -206,11 +192,10 @@ public final class FloorOneWorldService implements Listener {
 
     @EventHandler
     public void onTarget(final EntityTargetEvent event) {
-        if (event.getTarget() instanceof Player player && this.world != null && event.getEntity().getWorld().equals(this.world)) {
-            final var id = this.mobs.mobId(event.getEntity()).map(AssetId::toString).orElse("");
-            if (!MOB_WOLF.equals(id) && !MOB_BEETLE.equals(id)) return;
-            if (player.getWorld().equals(this.world) && player.getLocation().distanceSquared(spawnLocation()) > 10000D) event.setCancelled(true);
-        }
+        if (!(event.getTarget() instanceof Player player) || this.world == null || !event.getEntity().getWorld().equals(this.world)) return;
+        final String id = this.mobs.mobId(event.getEntity()).map(AssetId::toString).orElse("");
+        if (!MOB_WOLF.equals(id) && !MOB_BEETLE.equals(id)) return;
+        if (player.getLocation().distanceSquared(spawnLocation()) > 10000D) event.setCancelled(true);
     }
 
     @EventHandler
@@ -221,9 +206,14 @@ public final class FloorOneWorldService implements Listener {
         this.mobs.forget(event.getEntity().getUniqueId());
         Bukkit.getScheduler().runTask(this.plugin, () -> {
             if (this.shuttingDown) return;
-            if (this.quests.active(Bukkit.getOnlinePlayers().stream().findFirst().map(Player::getUniqueId).orElse(null)).contains(QUEST_FIRST_HUNT)) {
-                ensureHuntMobs();
+            boolean huntActive = false;
+            for (final Player online : Bukkit.getOnlinePlayers()) {
+                if (this.quests.active(online.getUniqueId()).contains(QUEST_FIRST_HUNT)) {
+                    huntActive = true;
+                    break;
+                }
             }
+            if (huntActive) ensureHuntMobs();
         });
     }
 
@@ -231,11 +221,10 @@ public final class FloorOneWorldService implements Listener {
     public void onMove(final PlayerMoveEvent event) {
         if (this.world == null || !event.getPlayer().getWorld().equals(this.world)) return;
         final Player player = event.getPlayer();
-        if (player.getLocation().getZ() < 47) return;
-        if (!this.quests.active(player.getUniqueId()).contains(QUEST_FIRST_GATE)) return;
+        if (player.getLocation().getZ() < 47 || !this.quests.active(player.getUniqueId()).contains(QUEST_FIRST_GATE)) return;
         final QuestService.Result result = this.quests.reachLocation(player.getUniqueId(), "first_gate");
         if (result.status() == QuestService.Status.SUCCESS) {
-            player.sendMessage("§cThe First Gate§f: The Warden of the First Gate steps from the arena.");
+            player.sendMessage("§cThe First Gate§f: The Warden of the First Gate steps forward.");
             ensureBoss();
         }
     }
@@ -247,6 +236,7 @@ public final class FloorOneWorldService implements Listener {
         creator.environment(World.Environment.NORMAL);
         creator.type(WorldType.FLAT);
         creator.generateStructures(false);
+        creator.generatorSettings("{\"layers\":[{\"height\":1,\"block\":\"minecraft:bedrock\"},{\"height\":63,\"block\":\"minecraft:dirt\"},{\"height\":1,\"block\":\"minecraft:grass_block\"}],\"biome\":\"minecraft:plains\"}");
         return creator.createWorld();
     }
 
@@ -272,8 +262,8 @@ public final class FloorOneWorldService implements Listener {
         path(target, -2, 4, 0, -28);
         buildHaven(target, y);
         buildGate(target, y);
-        buildSign(target, 0, y + 3, -29, "HAVEN", "Speak to Warden Lyra");
-        buildSign(target, 0, y + 3, 45, "THE FIRST GATE", "Guardian beyond this point");
+        buildSign(target, 0, y + 3, -29, "HAVEN", "Warden Lyra");
+        buildSign(target, 0, y + 3, 45, "THE FIRST GATE", "Guardian beyond");
     }
 
     private void buildHaven(final World target, final int y) {
@@ -283,19 +273,14 @@ public final class FloorOneWorldService implements Listener {
         for (int x = -3; x <= 3; x++) for (int z = -6; z <= 0; z++) target.getBlockAt(x, y + 2, z).setType(Material.STONE_BRICKS);
         for (int x = -1; x <= 1; x++) for (int z = -4; z <= -2; z++) target.getBlockAt(x, y + 2, z).setType(Material.WATER);
         target.getBlockAt(0, y + 1, -3).setType(Material.SEA_LANTERN);
-        fill(target, -18, 1, 18, 4, y + 1, Material.COBBLESTONE);
     }
 
     private void buildGate(final World target, final int y) {
-        for (int x = -13; x <= 13; x++) {
-            for (int yy = y + 1; yy <= y + 8; yy++) {
-                if (Math.abs(x) <= 3 && yy < y + 5) continue;
-                target.getBlockAt(x, yy, 50).setType(Material.STONE_BRICKS);
-            }
+        for (int x = -13; x <= 13; x++) for (int yy = y + 1; yy <= y + 8; yy++) {
+            if (Math.abs(x) <= 3 && yy < y + 5) continue;
+            target.getBlockAt(x, yy, 50).setType(Material.STONE_BRICKS);
         }
-        for (int x = -3; x <= 3; x++) {
-            for (int yy = y + 5; yy <= y + 8; yy++) target.getBlockAt(x, yy, 50).setType(Material.IRON_BARS);
-        }
+        for (int x = -3; x <= 3; x++) for (int yy = y + 5; yy <= y + 8; yy++) target.getBlockAt(x, yy, 50).setType(Material.IRON_BARS);
         for (int yy = y + 1; yy <= y + 10; yy++) {
             target.getBlockAt(-14, yy, 50).setType(Material.STONE_BRICKS);
             target.getBlockAt(14, yy, 50).setType(Material.STONE_BRICKS);
@@ -341,31 +326,31 @@ public final class FloorOneWorldService implements Listener {
     }
 
     private void giveStarterEquipment(final Player player) {
-        giveItem(player, "ascension:rookie_sword", 0);
-        giveItem(player, "ascension:rookie_iron_ring", 8);
+        final var sword = createItem("ascension:rookie_sword");
+        final var ring = createItem("ascension:rookie_iron_ring");
+        if (sword != null) player.getInventory().setItem(0, sword);
+        if (ring != null) player.getInventory().setItem(8, ring);
         player.getInventory().setHeldItemSlot(0);
     }
 
-    private void giveItem(final Player player, final String rawId, final int slot) {
+    private org.bukkit.inventory.ItemStack createItem(final String rawId) {
         final AssetId id = AssetId.parse(rawId);
-        if (!this.items.findDefinition(id).isPresent()) return;
-        final var definition = this.items.findDefinition(id).orElseThrow();
+        final var definition = this.items.findDefinition(id).orElse(null);
+        if (definition == null) return null;
         final Material material;
         try {
             material = Material.valueOf(definition.data().getString("material", "WOODEN_SWORD").toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException exception) {
-            return;
+            return null;
         }
         final var stack = new org.bukkit.inventory.ItemStack(material);
         final var meta = stack.getItemMeta();
         if (meta != null) {
-            meta.displayName(org.bukkit.inventory.ItemStack.deserializeBytes(stack.serializeAsBytes()).getItemMeta().displayName());
+            meta.displayName(net.kyori.adventure.text.Component.text(definition.descriptor().displayName()));
+            stack.setItemMeta(meta);
         }
-        final var mutableMeta = stack.getItemMeta();
-        if (mutableMeta != null) mutableMeta.displayName(net.kyori.adventure.text.Component.text(definition.descriptor().displayName()));
-        stack.setItemMeta(mutableMeta);
         this.itemEncoder.encode(this.items.create(id), stack);
-        player.getInventory().setItem(slot, stack);
+        return stack;
     }
 
     private Location spawnLocation() { return location(0, 66, -18); }
@@ -374,8 +359,7 @@ public final class FloorOneWorldService implements Listener {
     private static void path(final World world, final int x1, final int z1, final int x2, final int z2) {
         final int sx = Integer.signum(x2 - x1);
         final int sz = Integer.signum(z2 - z1);
-        int x = x1;
-        int z = z1;
+        int x = x1, z = z1;
         while (true) {
             for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) world.getBlockAt(x + dx, 65, z + dz).setType(Material.POLISHED_ANDESITE);
             if (x == x2 && z == z2) break;
@@ -391,7 +375,7 @@ public final class FloorOneWorldService implements Listener {
     private static void buildSign(final World world, final int x, final int y, final int z, final String line1, final String line2) {
         final var block = world.getBlockAt(x, y, z);
         block.setType(Material.OAK_SIGN);
-        if (block.getState() instanceof org.bukkit.block.Sign sign) {
+        if (block.getState() instanceof Sign sign) {
             sign.line(1, net.kyori.adventure.text.Component.text(line1));
             if (!line2.isBlank()) sign.line(2, net.kyori.adventure.text.Component.text(line2));
             sign.update(true, false);

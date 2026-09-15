@@ -13,4 +13,7 @@ data:
     experience: 50
     currency:
       ascent_tokens: 1
+    items:
+      - ascension:rookie_sword
+      - ascension:rookie_iron_ring
   follow_up: ascension:first_hunt

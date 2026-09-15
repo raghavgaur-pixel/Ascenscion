@@ -6,6 +6,7 @@ metadata:
   tier: 1
   role: armored_mob
 data:
+  entity_type: SILVERFISH
   level: 4
   health: 95.0
   defense: 18.0

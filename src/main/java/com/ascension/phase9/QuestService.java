@@ -4,7 +4,6 @@ import com.ascension.assets.definition.ItemDefinition;
 import com.ascension.assets.definition.QuestDefinition;
 import com.ascension.assets.model.AssetId;
 import com.ascension.items.meta.ItemMetadataEncoder;
-import com.ascension.items.runtime.AscensionItem;
 import com.ascension.items.service.ItemService;
 import com.ascension.profiles.component.CurrencyProfileComponent;
 import com.ascension.profiles.component.ProgressionProfileComponent;
@@ -29,7 +28,6 @@ import net.kyori.adventure.text.Component;
 
 /** Runtime quest orchestration over persistent profile state and authored quest assets. */
 public final class QuestService {
-
     private final RegistryHub registries;
     private final PlayerProfileService profiles;
     private final ProgressionService progression;
@@ -53,8 +51,7 @@ public final class QuestService {
         if (profile == null) return Result.rejected("Player profile is not loaded");
         final AssetId questId = parseId(questIdValue);
         if (questId == null) return Result.rejected("Invalid quest id: " + questIdValue);
-        final QuestDefinition quest = this.registries.getOrCreate(AscensionRegistries.QUEST_DEFINITIONS).find(questId)
-            .orElse(null);
+        final QuestDefinition quest = this.registries.getOrCreate(AscensionRegistries.QUEST_DEFINITIONS).find(questId).orElse(null);
         if (quest == null) return Result.rejected("Unknown quest: " + questIdValue);
         final QuestProgressProfileComponent state = state(profile);
         if (state.isCompleted(questId.toString())) return Result.rejected("Quest is already completed");
@@ -68,6 +65,7 @@ public final class QuestService {
     }
 
     public List<String> active(final UUID playerId) {
+        if (playerId == null) return List.of();
         final PlayerProfile profile = onlineProfile(playerId);
         return profile == null ? List.of() : List.copyOf(state(profile).activeSnapshot());
     }
@@ -86,7 +84,6 @@ public final class QuestService {
         return combine(mob, boss);
     }
 
-    /** Applies the rewards authored on a killed mob/boss definition. */
     public void grantKillRewards(final UUID playerId, final AssetId definitionId, final boolean boss) {
         final PlayerProfile profile = onlineProfile(playerId);
         if (profile == null) return;
@@ -95,22 +92,25 @@ public final class QuestService {
             : this.registries.getOrCreate(AscensionRegistries.MOB_DEFINITIONS).find(definitionId).orElse(null);
         if (definition == null) return;
         final long experience = definition.data().getObject("rewards").map(r -> r.getLong("experience", 0L)).orElse(0L);
-        if (experience > 0L) {
-            this.progression.grantExperience(component(profile, "progression", ProgressionProfileComponent.class), experience);
-        }
+        if (experience > 0L) this.progression.grantExperience(component(profile, "progression", ProgressionProfileComponent.class), experience);
         definition.data().getObject("rewards").ifPresent(rewards -> {
             final CurrencyProfileComponent currency = component(profile, "currency", CurrencyProfileComponent.class);
             for (final var entry : rewards.getLongMap("currency").entrySet()) currency.add(entry.getKey(), entry.getValue());
             final String floor = rewards.getString("unlock_floor", "");
             if (!floor.isBlank()) {
                 final AssetId floorId = parseId(floor);
-                if (floorId != null) this.tower.unlock(
-                    component(profile, "unlocked_floors", UnlockedFloorsProfileComponent.class), new FloorId(floorId.toString())
-                );
+                if (floorId != null) this.tower.unlock(component(profile, "unlocked_floors", UnlockedFloorsProfileComponent.class), new FloorId(floorId.toString()));
             }
             for (final String item : rewards.getStringSet("items")) giveItem(playerId, item);
         });
         save(playerId);
+    }
+
+    public void grantStarterItems(final UUID playerId) {
+        giveItem(playerId, "ascension:rookie_sword", 0);
+        giveItem(playerId, "ascension:rookie_iron_ring", 8);
+        final Player player = Bukkit.getPlayer(playerId);
+        if (player != null) player.getInventory().setHeldItemSlot(0);
     }
 
     private Result progress(final UUID playerId, final ObjectiveMatcher matcher) {
@@ -150,13 +150,10 @@ public final class QuestService {
             final String floor = rewards.getString("unlock_floor", "");
             if (!floor.isBlank()) {
                 final AssetId floorId = parseId(floor);
-                if (floorId != null) this.tower.unlock(
-                    component(profile, "unlocked_floors", UnlockedFloorsProfileComponent.class), new FloorId(floorId.toString())
-                );
+                if (floorId != null) this.tower.unlock(component(profile, "unlocked_floors", UnlockedFloorsProfileComponent.class), new FloorId(floorId.toString()));
             }
         });
-        final String followUp = quest.data().getString("follow_up", "");
-        final AssetId next = parseId(followUp);
+        final AssetId next = parseId(quest.data().getString("follow_up", ""));
         if (next != null && !state.isCompleted(next.toString())) state.accept(next.toString());
         final Player online = Bukkit.getPlayer(profile.uniqueId());
         if (online != null) online.sendMessage(Component.text("Quest complete: " + quest.displayName()));
@@ -171,7 +168,9 @@ public final class QuestService {
         return true;
     }
 
-    private void giveItem(final UUID playerId, final String itemIdValue) {
+    private void giveItem(final UUID playerId, final String itemIdValue) { giveItem(playerId, itemIdValue, -1); }
+
+    private void giveItem(final UUID playerId, final String itemIdValue, final int preferredSlot) {
         final AssetId itemId = parseId(itemIdValue);
         final Player player = Bukkit.getPlayer(playerId);
         if (itemId == null || player == null) return;
@@ -184,14 +183,12 @@ public final class QuestService {
         final var meta = stack.getItemMeta();
         if (meta != null) { meta.displayName(Component.text(definition.descriptor().displayName())); stack.setItemMeta(meta); }
         this.itemEncoder.encode(this.items.create(itemId), stack);
-        player.getInventory().addItem(stack);
+        if (preferredSlot >= 0) player.getInventory().setItem(preferredSlot, stack); else player.getInventory().addItem(stack);
     }
 
-    private PlayerProfile onlineProfile(final UUID playerId) { return this.profiles.online(playerId).orElse(null); }
+    private PlayerProfile onlineProfile(final UUID playerId) { return playerId == null ? null : this.profiles.online(playerId).orElse(null); }
     private void save(final UUID playerId) { this.profiles.save(playerId); }
-    private static <T> T component(final PlayerProfile profile, final String id, final Class<T> type) {
-        return profile.components().find(id).map(type::cast).orElseThrow(() -> new IllegalStateException("Missing profile component: " + id));
-    }
+    private static <T> T component(final PlayerProfile profile, final String id, final Class<T> type) { return profile.components().find(id).map(type::cast).orElseThrow(() -> new IllegalStateException("Missing profile component: " + id)); }
     private static QuestProgressProfileComponent state(final PlayerProfile profile) { return component(profile, "quests", QuestProgressProfileComponent.class); }
     private static String progressKey(final String questId, final int index) { return questId + ":" + index; }
     private static AssetId parseId(final String value) { if (value == null || value.isBlank()) return null; try { return AssetId.parse(value); } catch (RuntimeException exception) { return null; } }
@@ -205,8 +202,7 @@ public final class QuestService {
     }
     private record ObjectiveMatcher(String type, String valueKey, String value) {
         static ObjectiveMatcher type(final String type) { return new ObjectiveMatcher(type, "", ""); }
-        ObjectiveMatcher value(final String value) { return new ObjectiveMatcher(this.type,
-            this.type.equals("defeat_boss") ? "boss" : this.type.equals("defeat") ? "entity" : this.type.equals("talk_to_npc") ? "npc" : "location", value); }
+        ObjectiveMatcher value(final String value) { return new ObjectiveMatcher(this.type, this.type.equals("defeat_boss") ? "boss" : this.type.equals("defeat") ? "entity" : this.type.equals("talk_to_npc") ? "npc" : "location", value); }
         boolean matches(final com.ascension.serialization.SerializedObject objective) { return this.type.equalsIgnoreCase(objective.getString("type", "")) && (this.value.isBlank() || this.value.equals(objective.getString(this.valueKey, ""))); }
     }
 }
