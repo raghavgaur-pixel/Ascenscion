@@ -7,19 +7,16 @@ import com.ascension.effects.runtime.EffectContext;
 import com.ascension.effects.runtime.EffectInstance;
 import com.ascension.effects.runtime.EffectSource;
 import com.ascension.session.model.PlayerSession;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Runtime boundary used by authored ability behaviors.
- *
- * <p>Paper/Bukkit lookup and mutation are intentionally kept outside this
- * interface. The ability engine only works with Ascension domain objects and
- * delegates live-entity resolution to an infrastructure implementation.</p>
- */
+/** Runtime boundary used by authored ability behaviors. */
 public interface AbilityRuntimeGateway {
 
     Optional<CombatEntity> combatEntity(UUID uniqueId);
+
+    Collection<CombatEntity> nearbyCombatEntities(UUID originId, double radius);
 
     Optional<PlayerSession> playerSession(UUID uniqueId);
 
