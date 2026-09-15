@@ -105,7 +105,7 @@ public final class QuestService {
         final PlayerProfile profile = onlineProfile(playerId);
         if (profile == null) return;
         final long xp = boss ? 150L : (definitionId != null && WOLF.equals(definitionId.toString()) ? 25L : 30L);
-        this.progression.grantExperience(component(profile, "progression", ProgressionProfileComponent.class), xp);
+        progression.grantExperience(component(profile, "progression", ProgressionProfileComponent.class), xp);
         save(playerId);
     }
 
@@ -179,10 +179,8 @@ public final class QuestService {
         state.complete(questId);
         final long xp = switch (questId) { case ARRIVAL -> 50L; case FIRST_HUNT -> 150L; case FIRST_GATE -> 500L; default -> 0L; };
         if (xp > 0L) progression.grantExperience(component(profile, "progression", ProgressionProfileComponent.class), xp);
-
         final long tokens = switch (questId) { case ARRIVAL, FIRST_HUNT -> 1L; case FIRST_GATE -> 2L; default -> 0L; };
         profile.components().find("currency").filter(CurrencyProfileComponent.class::isInstance).map(CurrencyProfileComponent.class::cast).ifPresent(c -> c.add("ascent_tokens", tokens));
-
         if (FIRST_HUNT.equals(questId) && !state.isCompleted(FIRST_GATE) && !state.isActive(FIRST_GATE)) state.accept(FIRST_GATE);
         if (FIRST_GATE.equals(questId)) profile.components().find("unlocked_floors").filter(UnlockedFloorsProfileComponent.class::isInstance).map(UnlockedFloorsProfileComponent.class::cast).ifPresent(f -> tower.unlock(f, new FloorId("ascension:floor_002")));
         final Player player = Bukkit.getPlayer(profile.uniqueId());
