@@ -27,6 +27,7 @@ public final class RegistryModule extends AbstractModule {
         registryHub.getOrCreateReloadable(AscensionRegistries.ASSET_TYPES);
         registryHub.getOrCreateReloadable(AscensionRegistries.LOCALIZATION_BUNDLES);
         registryHub.getOrCreateReloadable(AscensionRegistries.ITEM_DEFINITIONS);
+        registryHub.getOrCreateReloadable(AscensionRegistries.ABILITY_DEFINITIONS);
         registryHub.getOrCreateReloadable(AscensionRegistries.SKILL_DEFINITIONS);
         registryHub.getOrCreateReloadable(AscensionRegistries.BOSS_DEFINITIONS);
         registryHub.getOrCreateReloadable(AscensionRegistries.FLOOR_DEFINITIONS);
