@@ -19,7 +19,10 @@ commands:
     description: Ascension development and gameplay command root.
     usage: /asc <subcommand>
     permission: ascension.command
+  quests:
+    description: Open your Ascension quest journal.
+    usage: /quests
 permissions:
   ascension.command:
-    description: Allows use of Ascension commands.
+    description: Allows use of Ascension command root.
     default: op
