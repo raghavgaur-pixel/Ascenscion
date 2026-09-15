@@ -13,6 +13,6 @@ data:
   damage:
     base: 34.0
     scaling:
-      attack_damage: 1.0
+      ascension:attack_power: 1.0
   tags: [boss, telegraphed, heavy]
   windup_ticks: 18
