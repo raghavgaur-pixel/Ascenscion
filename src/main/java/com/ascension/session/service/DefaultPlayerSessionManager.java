@@ -91,6 +91,13 @@ public final class DefaultPlayerSessionManager implements PlayerSessionManager {
                 this.sessions.remove(player.getUniqueId(), session);
                 session.dispose();
                 this.logger.error("Failed to initialize session for player " + player.getUniqueId() + ".", throwable);
+                if (!this.plugin.isEnabled()) {
+                    if (player.isOnline()) {
+                        player.kickPlayer("Failed to initialize your Ascension session.");
+                    }
+                    this.eventBus.publish(new PlayerSessionDestroyedEvent(session));
+                    return;
+                }
                 this.taskService.runSync("sessions", "kick-session-failure-" + player.getUniqueId(), () -> {
                     if (player.isOnline()) {
                         player.kickPlayer("Failed to initialize your Ascension session.");
@@ -115,15 +122,23 @@ public final class DefaultPlayerSessionManager implements PlayerSessionManager {
 
         return this.profileService.unload(uniqueId)
             .handle((ignored, throwable) -> throwable)
-            .thenCompose(throwable -> this.taskService.runSync("sessions", "finalize-session-" + uniqueId, () -> {
-                if (throwable == null) {
-                    this.eventBus.publish(new PlayerSessionSavedEvent(session));
-                } else {
-                    this.logger.error("Failed to unload session for player " + uniqueId + ".", throwable);
+            .thenCompose(throwable -> {
+                final java.util.function.Supplier<Void> finalizeSession = () -> {
+                    if (throwable == null) {
+                        this.eventBus.publish(new PlayerSessionSavedEvent(session));
+                    } else {
+                        this.logger.error("Failed to unload session for player " + uniqueId + ".", throwable);
+                    }
+                    this.eventBus.publish(new PlayerSessionDestroyedEvent(session));
+                    return null;
+                };
+
+                if (!this.plugin.isEnabled()) {
+                    return CompletableFuture.completedFuture(finalizeSession.get());
                 }
-                this.eventBus.publish(new PlayerSessionDestroyedEvent(session));
-                return null;
-            }));
+
+                return this.taskService.runSync("sessions", "finalize-session-" + uniqueId, finalizeSession::get);
+            });
     }
 
     @Override
