@@ -1,0 +1,13 @@
+id: ascension:rookie_sword
+version: 1.0.0
+display_name: Rookie Sword
+description: A dependable blade issued to new climbers of the Ascension Tower.
+metadata:
+  tier: 1
+  slot: weapon
+  rarity: common
+data:
+  material: IRON_SWORD
+stats:
+  ascension:strength: 3
+  ascension:dexterity: 1
