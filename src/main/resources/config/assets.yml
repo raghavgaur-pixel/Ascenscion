@@ -10,6 +10,7 @@ data:
     localization: localization
     stats: stats
     items: items
+    abilities: abilities
     skills: skills
     bosses: bosses
     floors: floors
