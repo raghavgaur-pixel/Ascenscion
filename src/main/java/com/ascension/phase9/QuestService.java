@@ -28,6 +28,9 @@ import net.kyori.adventure.text.Component;
 
 /** Runtime quest orchestration over persistent profile state and authored quest assets. */
 public final class QuestService {
+    private static final String ARRIVAL_QUEST = "ascension:arrival";
+    private static final String LYRA_NPC = "ascension:warden_lyra";
+
     private final RegistryHub registries;
     private final PlayerProfileService profiles;
     private final ProgressionService progression;
@@ -71,6 +74,10 @@ public final class QuestService {
     }
 
     public Result talkToNpc(final UUID playerId, final String npcId) {
+        if (LYRA_NPC.equals(npcId)) {
+            accept(playerId, ARRIVAL_QUEST);
+            grantStarterItems(playerId);
+        }
         return progress(playerId, ObjectiveMatcher.type("talk_to_npc").value(npcId));
     }
 
