@@ -1,0 +1,12 @@
+id: ascension:merchant_ren
+version: 1.0.0
+display_name: Merchant Ren
+description: Haven's starter equipment merchant.
+metadata:
+  role: merchant
+  floor: 1
+data:
+  location: haven
+  stock:
+    - ascension:rookie_sword
+    - ascension:rookie_iron_ring
