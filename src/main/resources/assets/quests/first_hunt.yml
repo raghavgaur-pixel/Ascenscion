@@ -1,0 +1,24 @@
+id: ascension:first_hunt
+version: 1.0.0
+display_name: The First Hunt
+description: Prove that you can survive outside Haven by hunting the common creatures of the first floor.
+metadata:
+  tier: 1
+  story: onboarding
+data:
+  prerequisites:
+    - ascension:arrival
+  objectives:
+    - type: defeat
+      entity: ascension:forest_wolf
+      amount: 5
+    - type: defeat
+      entity: ascension:iron_beetle
+      amount: 3
+  rewards:
+    experience: 150
+    currency:
+      ascent_tokens: 1
+    items:
+      - ascension:rookie_sword
+  follow_up: ascension:the_first_gate
