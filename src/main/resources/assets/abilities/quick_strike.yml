@@ -1,0 +1,19 @@
+id: ascension:quick_strike
+version: 1.0.0
+display_name: Quick Strike
+description: A fast single-target weapon technique with low commitment and reliable damage.
+metadata:
+  category: weapon
+  tier: starter
+target: SINGLE_ENTITY
+cost:
+  mana: 0.0
+cooldown_millis: 750
+data:
+  behavior: physical_attack
+  damage:
+    base: 8.0
+    scaling:
+      attack_damage: 1.0
+  animation:
+    duration_ticks: 4
