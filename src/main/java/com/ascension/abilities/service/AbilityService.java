@@ -1,6 +1,6 @@
 package com.ascension.abilities.service;
 
-import com.ascension.abilities.model.AbilityDefinition;
+import com.ascension.assets.definition.AbilityDefinition;
 import com.ascension.abilities.model.AbilityRequest;
 import com.ascension.abilities.model.AbilityResult;
 import java.util.Optional;
