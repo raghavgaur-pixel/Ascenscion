@@ -12,8 +12,5 @@ public record LevelProgress(int level, long experience, long experienceIntoLevel
         if (experience < 0L || experienceIntoLevel < 0L || experienceToNextLevel < 0L) {
             throw new IllegalArgumentException("experience values cannot be negative");
         }
-        if (experienceToNextLevel == 0L && level != Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("non-max levels require positive experienceToNextLevel");
-        }
     }
 }
