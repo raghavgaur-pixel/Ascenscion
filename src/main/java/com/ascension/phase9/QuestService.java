@@ -28,12 +28,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import net.kyori.adventure.text.Component;
 
-/** Persistent Floor 1 quest engine with safe fallbacks for runtime asset failures. */
+/** Persistent Floor 1 quest engine with robust gameplay fallbacks. */
 public final class QuestService {
     public static final String ARRIVAL = "ascension:arrival";
     public static final String FIRST_HUNT = "ascension:first_hunt";
     public static final String FIRST_GATE = "ascension:the_first_gate";
     public static final String LYRA = "ascension:warden_lyra";
+    public static final String NPC_REN = "ascension:merchant_ren";
     public static final String WOLF = "ascension:forest_wolf";
     public static final String BEETLE = "ascension:iron_beetle";
     public static final String BOSS = "ascension:warden_of_the_first_gate";
@@ -72,27 +73,10 @@ public final class QuestService {
         return Result.success();
     }
 
-    public List<String> active(final UUID playerId) {
-        final PlayerProfile profile = onlineProfile(playerId);
-        return profile == null ? List.of() : List.copyOf(state(profile).activeSnapshot());
-    }
-
-    public boolean isCompleted(final UUID playerId, final String questId) {
-        final PlayerProfile profile = onlineProfile(playerId);
-        return profile != null && state(profile).isCompleted(normalize(questId));
-    }
-
-    public QuestDefinition definition(final String questId) {
-        final AssetId id = parseId(questId);
-        if (id == null) return null;
-        try { return this.registries.getOrCreate(AscensionRegistries.QUEST_DEFINITIONS).find(id).orElse(null); }
-        catch (RuntimeException ignored) { return null; }
-    }
-
-    public int objectiveProgress(final UUID playerId, final String questId, final int index) {
-        final PlayerProfile profile = onlineProfile(playerId);
-        return profile == null ? 0 : state(profile).objectiveProgress(progressKey(normalize(questId), index));
-    }
+    public List<String> active(final UUID playerId) { final PlayerProfile profile = onlineProfile(playerId); return profile == null ? List.of() : List.copyOf(state(profile).activeSnapshot()); }
+    public boolean isCompleted(final UUID playerId, final String questId) { final PlayerProfile profile = onlineProfile(playerId); return profile != null && state(profile).isCompleted(normalize(questId)); }
+    public QuestDefinition definition(final String questId) { final AssetId id = parseId(questId); if (id == null) return null; try { return registries.getOrCreate(AscensionRegistries.QUEST_DEFINITIONS).find(id).orElse(null); } catch (RuntimeException ignored) { return null; } }
+    public int objectiveProgress(final UUID playerId, final String questId, final int index) { final PlayerProfile profile = onlineProfile(playerId); return profile == null ? 0 : state(profile).objectiveProgress(progressKey(normalize(questId), index)); }
 
     public Result talkToNpc(final UUID playerId, final String npcId) {
         if (!LYRA.equalsIgnoreCase(npcId)) return Result.noop();
@@ -104,10 +88,7 @@ public final class QuestService {
         return progress(playerId, ARRIVAL, 0, 1);
     }
 
-    public Result reachLocation(final UUID playerId, final String location) {
-        return "first_gate".equalsIgnoreCase(location) ? progress(playerId, FIRST_GATE, 0, 1) : Result.noop();
-    }
-
+    public Result reachLocation(final UUID playerId, final String location) { return "first_gate".equalsIgnoreCase(location) ? progress(playerId, FIRST_GATE, 0, 1) : Result.noop(); }
     public Result defeat(final UUID playerId, final String entityId, final String bossId) {
         Result result = Result.noop();
         if (WOLF.equalsIgnoreCase(entityId)) result = progress(playerId, FIRST_HUNT, 0, 5);
@@ -119,13 +100,7 @@ public final class QuestService {
     public void grantKillRewards(final UUID playerId, final AssetId definitionId, final boolean boss) {
         final PlayerProfile profile = onlineProfile(playerId);
         if (profile == null) return;
-        long xp = boss ? 150L : WOLF.equals(definitionId == null ? "" : definitionId.toString()) ? 25L : 30L;
-        try {
-            final var definition = boss
-                ? this.registries.getOrCreate(AscensionRegistries.BOSS_DEFINITIONS).find(definitionId).orElse(null)
-                : this.registries.getOrCreate(AscensionRegistries.MOB_DEFINITIONS).find(definitionId).orElse(null);
-            if (definition != null) xp = definition.data().getObject("rewards").map(r -> r.getLong("experience", xp)).orElse(xp);
-        } catch (RuntimeException ignored) { }
+        final long xp = boss ? 150L : (definitionId != null && WOLF.equals(definitionId.toString()) ? 25L : 30L);
         this.progression.grantExperience(component(profile, "progression", ProgressionProfileComponent.class), xp);
         save(playerId);
     }
@@ -141,49 +116,32 @@ public final class QuestService {
     private void grantOne(final Player player, final String id, final int slot, final Material fallback, final String name, final List<String> lore) {
         if (hasItem(player, id)) return;
         ItemStack stack = createItem(id, fallback, name, lore);
-        final ItemStack old = player.getInventory().getItem(slot);
-        if (old == null || old.getType().isAir()) player.getInventory().setItem(slot, stack);
-        else player.getInventory().addItem(stack);
+        ItemStack old = player.getInventory().getItem(slot);
+        if (old == null || old.getType().isAir()) player.getInventory().setItem(slot, stack); else player.getInventory().addItem(stack);
     }
 
     private ItemStack createItem(final String id, final Material fallback, final String name, final List<String> lore) {
         try {
-            final AssetId assetId = AssetId.parse(id);
-            final ItemDefinition definition = this.items.findDefinition(assetId).orElse(null);
+            AssetId assetId = AssetId.parse(id);
+            ItemDefinition definition = items.findDefinition(assetId).orElse(null);
             if (definition != null) {
-                final Material material = Material.valueOf(definition.data().getString("material", fallback.name()).toUpperCase(Locale.ROOT));
-                final ItemStack stack = new ItemStack(material);
-                final var meta = stack.getItemMeta();
-                if (meta != null) { meta.displayName(Component.text(definition.descriptor().displayName())); stack.setItemMeta(meta); }
-                this.itemEncoder.encode(this.items.create(assetId), stack);
+                Material material = Material.valueOf(definition.data().getString("material", fallback.name()).toUpperCase(Locale.ROOT));
+                ItemStack stack = new ItemStack(material);
+                var meta = stack.getItemMeta();
+                if (meta != null) { meta.displayName(Component.text("§b" + definition.descriptor().displayName())); stack.setItemMeta(meta); }
+                itemEncoder.encode(items.create(assetId), stack);
                 tagItem(stack, id);
                 return stack;
             }
         } catch (RuntimeException ignored) { }
-        final ItemStack stack = new ItemStack(fallback);
-        final var meta = stack.getItemMeta();
-        if (meta != null) { meta.displayName(Component.text("§b" + name)); meta.lore(lore.stream().map(Component::text).toList()); meta.getPersistentDataContainer().set(this.itemKey, PersistentDataType.STRING, id); stack.setItemMeta(meta); }
+        ItemStack stack = new ItemStack(fallback);
+        var meta = stack.getItemMeta();
+        if (meta != null) { meta.displayName(Component.text("§b" + name)); meta.lore(lore.stream().map(Component::text).toList()); meta.getPersistentDataContainer().set(itemKey, PersistentDataType.STRING, id); stack.setItemMeta(meta); }
         return stack;
     }
 
-    private void tagItem(final ItemStack stack, final String id) {
-        final var meta = stack.getItemMeta();
-        if (meta == null) return;
-        meta.getPersistentDataContainer().set(this.itemKey, PersistentDataType.STRING, id);
-        stack.setItemMeta(meta);
-    }
-
-    private boolean hasItem(final Player player, final String id) {
-        for (ItemStack stack : player.getInventory().getContents()) {
-            if (stack == null || !stack.hasItemMeta()) continue;
-            final String stored = stack.getItemMeta().getPersistentDataContainer().get(this.itemKey, PersistentDataType.STRING);
-            if (id.equals(stored)) return true;
-            final String name = stack.getItemMeta().hasDisplayName() ? stack.getItemMeta().getDisplayName() : "";
-            if (id.endsWith("rookie_sword") && name.contains("Rookie Sword")) return true;
-            if (id.endsWith("rookie_iron_ring") && name.contains("Rookie Iron Ring")) return true;
-        }
-        return false;
-    }
+    private void tagItem(final ItemStack stack, final String id) { var meta = stack.getItemMeta(); if (meta == null) return; meta.getPersistentDataContainer().set(itemKey, PersistentDataType.STRING, id); stack.setItemMeta(meta); }
+    private boolean hasItem(final Player player, final String id) { for (ItemStack stack : player.getInventory().getContents()) { if (stack == null || !stack.hasItemMeta()) continue; var pdc = stack.getItemMeta().getPersistentDataContainer(); String stored = pdc.get(itemKey, PersistentDataType.STRING); if (id.equals(stored)) return true; String name = stack.getItemMeta().hasDisplayName() ? stack.getItemMeta().getDisplayName() : ""; if (id.endsWith("rookie_sword") && name.contains("Rookie Sword")) return true; if (id.endsWith("rookie_iron_ring") && name.contains("Rookie Iron Ring")) return true; } return false; }
 
     private Result progress(final UUID playerId, final String questId, final int objective, final int required) {
         final PlayerProfile profile = onlineProfile(playerId);
@@ -195,36 +153,26 @@ public final class QuestService {
             if (FIRST_GATE.equals(questId) && !state.isCompleted(FIRST_HUNT)) return Result.noop();
             state.accept(questId);
         }
-        final String key = progressKey(questId, objective);
+        String key = progressKey(questId, objective);
         if (state.objectiveProgress(key) < required) state.addProgress(key, 1);
         if (hardcodedComplete(state, questId)) complete(profile, questId);
         save(playerId);
         return Result.success();
     }
 
-    private boolean hardcodedComplete(final QuestProgressProfileComponent state, final String questId) {
-        return switch (questId) {
-            case ARRIVAL -> state.objectiveProgress(progressKey(ARRIVAL, 0)) >= 1;
-            case FIRST_HUNT -> state.objectiveProgress(progressKey(FIRST_HUNT, 0)) >= 5 && state.objectiveProgress(progressKey(FIRST_HUNT, 1)) >= 3;
-            case FIRST_GATE -> state.objectiveProgress(progressKey(FIRST_GATE, 0)) >= 1 && state.objectiveProgress(progressKey(FIRST_GATE, 1)) >= 1;
-            default -> false;
-        };
-    }
+    private boolean hardcodedComplete(final QuestProgressProfileComponent state, final String questId) { return switch (questId) { case ARRIVAL -> state.objectiveProgress(progressKey(ARRIVAL, 0)) >= 1; case FIRST_HUNT -> state.objectiveProgress(progressKey(FIRST_HUNT, 0)) >= 5 && state.objectiveProgress(progressKey(FIRST_HUNT, 1)) >= 3; case FIRST_GATE -> state.objectiveProgress(progressKey(FIRST_GATE, 0)) >= 1 && state.objectiveProgress(progressKey(FIRST_GATE, 1)) >= 1; default -> false; }; }
 
     private void complete(final PlayerProfile profile, final String questId) {
-        final QuestProgressProfileComponent state = state(profile);
-        state.complete(questId);
-        final ProgressionProfileComponent progressionState = component(profile, "progression", ProgressionProfileComponent.class);
-        this.progression.grantExperience(progressionState, switch (questId) { case ARRIVAL -> 50L; case FIRST_HUNT -> 150L; case FIRST_GATE -> 500L; default -> 0L; });
+        final QuestProgressProfileComponent state = state(profile); state.complete(questId);
+        this.progression.grantExperience(component(profile, "progression", ProgressionProfileComponent.class), switch (questId) { case ARRIVAL -> 50L; case FIRST_HUNT -> 150L; case FIRST_GATE -> 500L; default -> 0L; });
         component(profile, "currency", CurrencyProfileComponent.class).add("ascent_tokens", switch (questId) { case ARRIVAL, FIRST_HUNT -> 1L; case FIRST_GATE -> 2L; default -> 0L; });
         if (FIRST_HUNT.equals(questId)) state.accept(FIRST_GATE);
         if (FIRST_GATE.equals(questId)) this.tower.unlock(component(profile, "unlocked_floors", UnlockedFloorsProfileComponent.class), new FloorId("ascension:floor_002"));
-        final Player player = Bukkit.getPlayer(profile.uniqueId());
-        if (player != null) player.sendMessage(Component.text("§6✦ Quest Complete: §f" + displayName(questId)));
+        Player player = Bukkit.getPlayer(profile.uniqueId()); if (player != null) player.sendMessage(Component.text("§6✦ Quest Complete: §f" + displayName(questId)));
     }
 
-    private PlayerProfile onlineProfile(final UUID id) { return id == null ? null : this.profiles.online(id).orElse(null); }
-    private void save(final UUID id) { this.profiles.save(id); }
+    private PlayerProfile onlineProfile(final UUID id) { return id == null ? null : profiles.online(id).orElse(null); }
+    private void save(final UUID id) { profiles.save(id); }
     private static <T> T component(final PlayerProfile profile, final String id, final Class<T> type) { return profile.components().find(id).map(type::cast).orElseThrow(() -> new IllegalStateException("Missing profile component: " + id)); }
     private static QuestProgressProfileComponent state(final PlayerProfile profile) { return component(profile, "quests", QuestProgressProfileComponent.class); }
     private static String progressKey(final String quest, final int index) { return quest + ":" + index; }
