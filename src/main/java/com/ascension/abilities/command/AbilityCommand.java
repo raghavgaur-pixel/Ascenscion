@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Development-facing ability trigger for validating the full runtime pipeline.
- * Usage: /asc cast <ability-id> [player-target]
+ * Usage: /asc cast <ability-id> [online-player-target]
  */
 public final class AbilityCommand implements CommandExecutor {
 
@@ -45,7 +45,7 @@ public final class AbilityCommand implements CommandExecutor {
             ? args[1]
             : "ascension:" + args[1].toLowerCase(Locale.ROOT);
 
-        Optional<Player> target = Optional.empty();
+        Optional<LivingEntity> target = Optional.empty();
         if (args.length >= 3) {
             target = Optional.ofNullable(Bukkit.getPlayerExact(args[2]));
             if (target.isEmpty()) {
@@ -53,11 +53,11 @@ public final class AbilityCommand implements CommandExecutor {
                 return true;
             }
         } else if (player.getTargetEntity(8) instanceof LivingEntity living) {
-            target = Optional.ofNullable(living instanceof Player targetPlayer ? targetPlayer : null);
+            target = Optional.of(living);
         }
 
         if (target.isEmpty()) {
-            sender.sendMessage("A player target is required for this development command.");
+            sender.sendMessage("Look at a living entity or provide an online player target.");
             return true;
         }
 
