@@ -66,7 +66,7 @@ public final class PhaseNineModule extends AbstractModule {
                 plugin.getServer().getScheduler().runTaskLater(plugin, () -> initializeFloorOnePlayer(event.getPlayer().getUniqueId(), quests, tower, floorWorld, services), 20L);
             }
         }, plugin);
-        registerCommand(services, new PhaseNineCommand(quests, mobs, services.require(PlayerSessionManager.class), tower));
+        registerCommand(services, new PhaseNineCommand(quests, mobs, services.require(PlayerSessionManager.class), tower, journal));
     }
 
     private static void initializeFloorOnePlayer(final java.util.UUID playerId, final QuestService quests, final TowerService tower, final FloorOneWorldService floorWorld, final ServiceRegistry services) {
@@ -79,7 +79,6 @@ public final class PhaseNineModule extends AbstractModule {
         quests.accept(playerId, "ascension:arrival");
         quests.grantStarterItems(playerId);
         floorWorld.preparePlayer(player);
-        // Keep the first wilderness visibly alive; the quest engine tracks the same authored mobs.
         floorWorld.ensureHuntMobs();
         services.require(PlayerProfileService.class).save(playerId);
     }
