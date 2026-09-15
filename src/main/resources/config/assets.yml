@@ -13,6 +13,7 @@ data:
     abilities: abilities
     skills: skills
     bosses: bosses
+    mobs: mobs
     floors: floors
     quests: quests
     loot_tables: loot_tables
