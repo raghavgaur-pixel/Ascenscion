@@ -8,6 +8,7 @@ import com.ascension.assets.definition.NpcDefinition;
 import com.ascension.assets.definition.ProfessionDefinition;
 import com.ascension.assets.definition.QuestDefinition;
 import com.ascension.assets.definition.SkillDefinition;
+import com.ascension.assets.definition.AbilityDefinition;
 import com.ascension.assets.loader.AssetFrameworkSettings;
 import com.ascension.assets.loader.AssetReloadResult;
 import com.ascension.assets.loader.AssetService;
@@ -18,9 +19,9 @@ import com.ascension.assets.loader.TranslationBundleSerializer;
 import com.ascension.assets.localization.DefaultLocalizationService;
 import com.ascension.assets.localization.LocalizationService;
 import com.ascension.assets.localization.LocalizationSettings;
-import com.ascension.assets.localization.TranslationBundleDefinition;
 import com.ascension.assets.model.AssetDefinition;
 import com.ascension.assets.model.AssetId;
+import com.ascension.abilities.loader.AbilityDefinitionSerializer;
 import com.ascension.core.config.typed.TypedConfigurationService;
 import com.ascension.core.logging.PluginLogger;
 import com.ascension.core.module.AbstractModule;
@@ -110,47 +111,20 @@ public final class AssetModule extends AbstractModule {
         );
 
         assetService.registerType(localization);
-        assetService.registerType(genericType(
-            "skills",
-            "skills",
-            AscensionRegistries.SKILL_DEFINITIONS,
-            SkillDefinition::new
-        ));
-        assetService.registerType(genericType(
-            "bosses",
-            "bosses",
-            AscensionRegistries.BOSS_DEFINITIONS,
-            BossDefinition::new
-        ));
-        assetService.registerType(genericType(
-            "floors",
-            "floors",
-            AscensionRegistries.FLOOR_DEFINITIONS,
-            FloorDefinition::new
-        ));
-        assetService.registerType(genericType(
-            "quests",
-            "quests",
-            AscensionRegistries.QUEST_DEFINITIONS,
-            QuestDefinition::new
-        ));
-        assetService.registerType(genericType(
-            "professions",
-            "professions",
-            AscensionRegistries.PROFESSION_DEFINITIONS,
-            ProfessionDefinition::new
-        ));
-        assetService.registerType(genericType(
-            "loot_tables",
-            "loot_tables",
-            AscensionRegistries.LOOT_TABLE_DEFINITIONS,
-            LootTableDefinition::new
-        ));
-        assetService.registerType(genericType(
-            "npc",
-            "npc",
-            AscensionRegistries.NPC_DEFINITIONS,
-            NpcDefinition::new
+        assetService.registerType(genericType("skills", "skills", AscensionRegistries.SKILL_DEFINITIONS, SkillDefinition::new));
+        assetService.registerType(genericType("bosses", "bosses", AscensionRegistries.BOSS_DEFINITIONS, BossDefinition::new));
+        assetService.registerType(genericType("floors", "floors", AscensionRegistries.FLOOR_DEFINITIONS, FloorDefinition::new));
+        assetService.registerType(genericType("quests", "quests", AscensionRegistries.QUEST_DEFINITIONS, QuestDefinition::new));
+        assetService.registerType(genericType("professions", "professions", AscensionRegistries.PROFESSION_DEFINITIONS, ProfessionDefinition::new));
+        assetService.registerType(genericType("loot_tables", "loot_tables", AscensionRegistries.LOOT_TABLE_DEFINITIONS, LootTableDefinition::new));
+        assetService.registerType(genericType("npc", "npc", AscensionRegistries.NPC_DEFINITIONS, NpcDefinition::new));
+        assetService.registerType(new AssetType<>(
+            AssetConfigurationDescriptors.OWNER,
+            "abilities",
+            "abilities",
+            AscensionRegistries.ABILITY_DEFINITIONS,
+            new AbilityDefinitionSerializer(),
+            Validator.noop()
         ));
         assetService.registerType(new AssetType<>(
             AssetConfigurationDescriptors.OWNER,
@@ -192,10 +166,7 @@ public final class AssetModule extends AbstractModule {
         };
     }
 
-    private static void createAssetDirectories(
-        final AssetFrameworkSettings settings,
-        final PluginPlatform platform
-    ) {
+    private static void createAssetDirectories(final AssetFrameworkSettings settings, final PluginPlatform platform) {
         final Path root = platform.dataFolder().toPath().resolve(settings.rootDirectory());
         createDirectory(root);
         for (final String directory : settings.ownedDirectories().values()) {
@@ -211,15 +182,9 @@ public final class AssetModule extends AbstractModule {
         }
     }
 
-    private static void saveBundledLocalizationResource(
-        final JavaPlugin plugin,
-        final AssetFrameworkSettings settings
-    ) {
+    private static void saveBundledLocalizationResource(final JavaPlugin plugin, final AssetFrameworkSettings settings) {
         final String relativeDirectory = settings.ownedDirectories().getOrDefault("localization", "localization");
-        final Path target = plugin.getDataFolder().toPath()
-            .resolve(settings.rootDirectory())
-            .resolve(relativeDirectory)
-            .resolve("en_us.yml");
+        final Path target = plugin.getDataFolder().toPath().resolve(settings.rootDirectory()).resolve(relativeDirectory).resolve("en_us.yml");
         if (Files.exists(target)) {
             return;
         }
