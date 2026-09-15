@@ -34,26 +34,12 @@ public final class SerializedObject {
         return this.values;
     }
 
-    /**
-     * Creates a new object without a top-level key.
-     *
-     * @param key key to remove
-     * @return copied object without the key
-     */
     public SerializedObject without(final String key) {
         final Map<String, Object> copied = new LinkedHashMap<>(this.values);
         copied.remove(Objects.requireNonNull(key, "key"));
         return SerializedObject.copyOf(copied);
     }
 
-    /**
-     * Creates a new object by merging this object with overrides.
-     *
-     * <p>Nested maps are merged recursively and override values win.
-     *
-     * @param overrides override values
-     * @return merged object
-     */
     public SerializedObject merge(final SerializedObject overrides) {
         final Map<String, Object> merged = new LinkedHashMap<>(this.values);
         for (final Map.Entry<String, Object> entry : overrides.asMap().entrySet()) {
@@ -127,6 +113,32 @@ public final class SerializedObject {
         return Map.copyOf(result);
     }
 
+    public Map<String, Double> getDoubleMap(final String key) {
+        final Object value = this.values.get(key);
+        final Map<?, ?> rawMap;
+        if (value instanceof Map<?, ?> mapValue) {
+            rawMap = mapValue;
+        } else if (value instanceof ConfigurationSection section) {
+            rawMap = section.getValues(false);
+        } else {
+            return Map.of();
+        }
+
+        final Map<String, Double> result = new LinkedHashMap<>();
+        for (final Map.Entry<?, ?> entry : rawMap.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                continue;
+            }
+            final Object entryValue = entry.getValue();
+            if (entryValue instanceof Number number) {
+                result.put(entry.getKey().toString(), number.doubleValue());
+            } else if (entryValue instanceof String stringValue) {
+                result.put(entry.getKey().toString(), Double.parseDouble(stringValue));
+            }
+        }
+        return Map.copyOf(result);
+    }
+
     public Map<String, String> getStringMap(final String key) {
         final Object value = this.values.get(key);
         final Map<?, ?> rawMap;
@@ -185,9 +197,6 @@ public final class SerializedObject {
         return java.util.List.copyOf(result);
     }
 
-    /**
-     * Mutable builder for a serialized object.
-     */
     public static final class Builder {
 
         private final Map<String, Object> values = new LinkedHashMap<>();
@@ -202,23 +211,22 @@ public final class SerializedObject {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private static Object mergeValue(final Object baseValue, final Object overrideValue) {
-        final Object normalizedBase = baseValue instanceof org.bukkit.configuration.ConfigurationSection baseSection
+        final Object normalizedBase = baseValue instanceof ConfigurationSection baseSection
             ? baseSection.getValues(false)
             : baseValue;
-        final Object normalizedOverride = overrideValue instanceof org.bukkit.configuration.ConfigurationSection overrideSection
+        final Object normalizedOverride = overrideValue instanceof ConfigurationSection overrideSection
             ? overrideSection.getValues(false)
             : overrideValue;
 
         if (normalizedBase instanceof Map<?, ?> baseMap && normalizedOverride instanceof Map<?, ?> overrideMap) {
             final Map<String, Object> merged = new LinkedHashMap<>();
-            for (final Map.Entry<?, ?> entry : ((Map<?, ?>) baseMap).entrySet()) {
+            for (final Map.Entry<?, ?> entry : baseMap.entrySet()) {
                 if (entry.getKey() != null) {
                     merged.put(entry.getKey().toString(), entry.getValue());
                 }
             }
-            for (final Map.Entry<?, ?> entry : ((Map<?, ?>) overrideMap).entrySet()) {
+            for (final Map.Entry<?, ?> entry : overrideMap.entrySet()) {
                 if (entry.getKey() != null) {
                     final String key = entry.getKey().toString();
                     merged.put(key, mergeValue(merged.get(key), entry.getValue()));
