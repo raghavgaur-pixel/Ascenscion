@@ -1,0 +1,22 @@
+id: ascension:iron_beetle
+version: 1.0.0
+display_name: Iron Beetle
+description: A slow armored creature found near the old road.
+metadata:
+  tier: 1
+  role: armored_mob
+data:
+  level: 4
+  health: 95.0
+  defense: 18.0
+  attack_damage: 12.0
+  movement_speed: 0.18
+  aggro_range: 10.0
+  abilities:
+    - ascension:quick_strike
+  rewards:
+    experience: 30
+    loot_table: ascension:iron_beetle
+  behavior:
+    type: defensive
+    leash_distance: 18.0
