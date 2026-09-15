@@ -66,7 +66,9 @@ public final class AbilityCommand implements CommandExecutor {
             abilityId,
             target.get().getUniqueId()
         ));
-        sender.sendMessage(result.success() ? "Ability executed." : "Ability rejected: " + result.reason());
+        sender.sendMessage(result.status() == com.ascension.abilities.model.AbilityResult.Status.SUCCESS
+            ? "Ability executed."
+            : "Ability rejected: " + result.reason());
         return true;
     }
 }
