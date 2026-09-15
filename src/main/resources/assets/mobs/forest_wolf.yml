@@ -1,0 +1,22 @@
+id: ascension:forest_wolf
+version: 1.0.0
+display_name: Forest Wolf
+description: A common predator of the Whispering Woods.
+metadata:
+  tier: 1
+  role: melee_mob
+data:
+  level: 2
+  health: 55.0
+  defense: 6.0
+  attack_damage: 9.0
+  movement_speed: 0.34
+  aggro_range: 12.0
+  abilities:
+    - ascension:quick_strike
+  rewards:
+    experience: 18
+    loot_table: ascension:forest_wolf
+  behavior:
+    type: predator
+    leash_distance: 24.0
