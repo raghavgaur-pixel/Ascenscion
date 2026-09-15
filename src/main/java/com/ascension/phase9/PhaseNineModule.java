@@ -65,9 +65,9 @@ public final class PhaseNineModule extends AbstractModule {
         if (attempt >= 10 || !player.isOnline()) return;
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             if (!player.isOnline()) return;
-            boolean ready = initializeFloorOnePlayer(player.getUniqueId(), quests, tower, floorWorld, services);
+            final boolean ready = initializeFloorOnePlayer(player.getUniqueId(), quests, tower, floorWorld, services);
             if (!ready) bootstrapRetry(plugin, player, quests, tower, floorWorld, services, attempt + 1);
-        }, attempt == 0 ? 20L : 20L);
+        }, 20L);
     }
 
     private static boolean initializeFloorOnePlayer(final java.util.UUID playerId, final QuestService quests, final TowerService tower, final FloorOneWorldService floorWorld, final ServiceRegistry services) {
@@ -80,7 +80,6 @@ public final class PhaseNineModule extends AbstractModule {
         quests.accept(playerId, QuestService.ARRIVAL);
         quests.grantStarterItems(playerId);
         floorWorld.preparePlayer(player);
-        floorWorld.ensureHuntMobs();
         services.require(PlayerProfileService.class).save(playerId);
         return true;
     }
