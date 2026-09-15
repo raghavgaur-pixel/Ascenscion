@@ -1,0 +1,20 @@
+id: ascension:floor_002
+version: 1.0.0
+display_name: Floor 2 — The Verdant Rise
+description: The second persistent region of the Ascension Tower, opening a deeper layer of the climb.
+metadata:
+  tier: 2
+  region_type: persistent
+data:
+  order: 2
+  world: ascension_floor_002
+  recommended_level: 10
+  level_range: 10-20
+  entry_mode: persistent_region
+  prerequisite_floor: ascension:floor_001
+  spawn: gate:arrival
+  locations:
+    - gate
+    - emerald_path
+    - vinebound_ruins
+    - skybridge
