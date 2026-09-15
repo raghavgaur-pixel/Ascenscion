@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 7: Effects engine framework completed.
+Phase 9: Ability and content systems — foundation in progress.
 
 ## Completed
 
@@ -39,20 +39,24 @@ Phase 7: Effects engine framework completed.
 - Added a localization framework backed by translation bundle assets and typed localization settings
 - Added default asset and localization directory scaffolding plus bundled seed localization data
 - Added equipment engine with separation of concerns from the item engine
-- Implemented the Effects Engine, introducing an abstract `EffectService` managing generic gameplay effect lifecycles, duration ticking, modifier scaling, and automatic teardown on player disconnect.
+- Implemented the Effects Engine, introducing an abstract EffectService managing generic gameplay effect lifecycles, duration ticking, modifier scaling, and automatic teardown on player disconnect
+- Implemented the Combat Engine foundation with a deterministic attack/damage pipeline, typed damage sources and types, immutable combat snapshots, isolated health mutation, and internal combat events
+- Phase 9 foundation: canonical stat vocabulary, immutable stat values/sets, data-driven ability definitions, and explicit ability request/result/service contracts
 
-## Not Started
+## Not Started / In Progress
 
-- Gameplay systems
-- Combat
-- Tower progression
+- Ability registry integration and runtime execution
+- Resource and cooldown enforcement
+- Targeting pipeline
+- Player level/XP progression
+- Tower runtime progression
+- Gameplay content and first playable floor
 
 ## Risks / Constraints
 
 - Local environment currently lacks `mvn`, so compile verification is pending.
-- `.git` metadata was present but initially inconsistent; repository content itself is now structured normally.
 - `javac` is available locally, but dependency-resolved project compilation still requires Maven or an equivalent build runner.
 
 ## Next Implementation Step
 
-Phase 9: Ability and content systems
+Implement the Phase 9 ability runtime: registry-backed definitions, cooldown/resource enforcement, validation, targeting contracts, and deterministic execution integration with CombatService and EffectsService.
