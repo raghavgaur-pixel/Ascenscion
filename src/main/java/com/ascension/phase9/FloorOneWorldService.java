@@ -36,10 +36,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** Playable Floor 1 world with a large procedural overworld and authored Haven settlement. */
+/** Playable Floor 1: a large procedural world wrapped around a handcrafted Haven starter region. */
 public final class FloorOneWorldService implements Listener {
     public static final String WORLD_NAME = "ascension_floor_001";
-    private static final String WORLD_VERSION = "floor_001_world_v3";
+    private static final String WORLD_VERSION = "floor_001_world_v4";
     private static final int GATE_Z = 720;
     private static final int BOSS_Z = 755;
     private static final String NPC_LYRA = "ascension:warden_lyra";
@@ -62,14 +62,9 @@ public final class FloorOneWorldService implements Listener {
     private World world;
     private boolean shuttingDown;
 
-    public FloorOneWorldService(
-        final JavaPlugin plugin,
-        final QuestService quests,
-        final MobService mobs,
-        final AbilityService abilities,
-        final ItemService items,
-        final ItemMetadataEncoder itemEncoder
-    ) {
+    public FloorOneWorldService(final JavaPlugin plugin, final QuestService quests, final MobService mobs,
+                                final AbilityService abilities, final ItemService items,
+                                final ItemMetadataEncoder itemEncoder) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
         this.quests = Objects.requireNonNull(quests, "quests");
         this.mobs = Objects.requireNonNull(mobs, "mobs");
@@ -83,7 +78,7 @@ public final class FloorOneWorldService implements Listener {
 
     public void start() {
         this.shuttingDown = false;
-        this.prepareWorldMigration();
+        migrateLegacyWorld();
         this.world = loadWorld();
         configureWorld(this.world);
         if (!hasCurrentWorldBuild()) {
@@ -92,7 +87,7 @@ public final class FloorOneWorldService implements Listener {
         }
         ensureNpcs();
         this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
-        this.plugin.getLogger().info("Floor 1 world ready: " + WORLD_NAME + " / 10,000 block border / " + WORLD_VERSION);
+        this.plugin.getLogger().info("Floor 1 ready: procedural 10,000 x 10,000 world with expanded Haven.");
     }
 
     public void stop() {
@@ -115,7 +110,7 @@ public final class FloorOneWorldService implements Listener {
             player.teleport(spawnLocation());
             player.setRespawnLocation(spawnLocation(), true);
             player.sendTitle("Ascension Tower", "Floor 1 — The First Field", 10, 70, 20);
-            player.sendMessage("§8Welcome to §6Haven§8, last safe settlement before the First Gate.");
+            player.sendMessage("§8Welcome to §6Haven§8. The road north leads into the First Field.");
         } else if (player.getInventory().getItem(0) == null || player.getInventory().getItem(0).getType() != Material.IRON_SWORD) {
             giveStarterEquipment(player);
         }
@@ -123,19 +118,20 @@ public final class FloorOneWorldService implements Listener {
 
     public void ensureHuntMobs() {
         if (this.world == null) return;
-        int wolves = 0;
-        int beetles = 0;
+        int wolves = 0, beetles = 0;
         for (final Entity entity : this.world.getEntities()) {
             final String id = this.mobs.mobId(entity).map(AssetId::toString).orElse("");
             if (MOB_WOLF.equals(id) && !entity.isDead()) wolves++;
             if (MOB_BEETLE.equals(id) && !entity.isDead()) beetles++;
         }
         final Location[] wolfSpawns = {
-            location(92, 74, 180), location(-90, 74, 205), location(150, 76, 260),
-            location(-145, 75, 290), location(52, 74, 335)
+            location(92, terrainYAt(92, 180) + 1, 180), location(-90, terrainYAt(-90, 205) + 1, 205),
+            location(150, terrainYAt(150, 260) + 1, 260), location(-145, terrainYAt(-145, 290) + 1, 290),
+            location(52, terrainYAt(52, 335) + 1, 335)
         };
         final Location[] beetleSpawns = {
-            location(175, 78, 220), location(-175, 78, 245), location(125, 75, 345)
+            location(175, terrainYAt(175, 220) + 1, 220), location(-175, terrainYAt(-175, 245) + 1, 245),
+            location(125, terrainYAt(125, 345) + 1, 345)
         };
         for (int i = wolves; i < wolfSpawns.length; i++) this.mobs.spawnMob(AssetId.parse(MOB_WOLF), wolfSpawns[i]);
         for (int i = beetles; i < beetleSpawns.length; i++) this.mobs.spawnMob(AssetId.parse(MOB_BEETLE), beetleSpawns[i]);
@@ -146,14 +142,13 @@ public final class FloorOneWorldService implements Listener {
         for (final Entity entity : this.world.getEntities()) {
             if (BOSS_WARDEN.equals(this.mobs.bossId(entity).map(AssetId::toString).orElse("")) && !entity.isDead()) return;
         }
-        final LivingEntity boss = this.mobs.spawnBoss(AssetId.parse(BOSS_WARDEN), location(0, terrainY(BOSS_Z), BOSS_Z)).orElse(null);
+        final LivingEntity boss = this.mobs.spawnBoss(AssetId.parse(BOSS_WARDEN), location(0, terrainYAt(0, BOSS_Z) + 1, BOSS_Z)).orElse(null);
         if (boss != null) {
             boss.setPersistent(true);
             boss.setGlowing(true);
             boss.setRemoveWhenFarAway(false);
             boss.setCustomNameVisible(true);
             boss.playEffect(EntityEffect.HURT);
-            this.plugin.getLogger().info("Spawned Floor 1 Warden boss encounter.");
         }
     }
 
@@ -185,8 +180,7 @@ public final class FloorOneWorldService implements Listener {
         if (!(event.getDamager() instanceof Player player)) return;
         if (!(event.getEntity() instanceof LivingEntity target)) return;
         if (this.shuttingDown || this.world == null || !target.getWorld().equals(this.world)) return;
-        final boolean authored = this.mobs.mobId(target).isPresent() || this.mobs.bossId(target).isPresent();
-        if (!authored) return;
+        if (this.mobs.mobId(target).isEmpty() && this.mobs.bossId(target).isEmpty()) return;
         event.setCancelled(true);
         if (player.getInventory().getItemInMainHand().getType() != Material.IRON_SWORD) {
             player.sendActionBar("§eEquip your Rookie Sword to attack.");
@@ -212,9 +206,9 @@ public final class FloorOneWorldService implements Listener {
     @EventHandler
     public void onDeath(final EntityDeathEvent event) {
         if (this.world == null || !event.getEntity().getWorld().equals(this.world)) return;
-        final boolean authored = this.mobs.mobId(event.getEntity()).isPresent() || this.mobs.bossId(event.getEntity()).isPresent();
-        if (!authored) return;
-        this.mobs.forget(event.getEntity().getUniqueId());
+        if (this.mobs.mobId(event.getEntity()).isPresent() || this.mobs.bossId(event.getEntity()).isPresent()) {
+            this.mobs.forget(event.getEntity().getUniqueId());
+        }
     }
 
     @EventHandler
@@ -249,235 +243,183 @@ public final class FloorOneWorldService implements Listener {
         target.setGameRule(GameRule.DO_MOB_SPAWNING, false);
         target.getWorldBorder().setCenter(0, 0);
         target.getWorldBorder().setSize(10000);
-        target.setSpawnLocation(0, 74, -70);
+        target.setSpawnLocation(0, 74, -72);
     }
 
     private void buildFloor(final World target) {
         final int y = 72;
         buildHaven(target, y);
-        buildNorthRoad(target);
-        buildSouthRoad(target);
-        buildEastRoad(target);
-        buildWestRoad(target);
+        buildPath(target, 0, 88, 0, GATE_Z, 4);
+        buildPath(target, 0, -105, 0, -430, 4);
+        buildPath(target, 150, -62, 620, -62, 4);
+        buildPath(target, -150, -62, -620, -62, 4);
         buildWhisperingWoodsOutpost(target);
         buildFirstGate(target);
-        buildSign(target, 0, y + 4, -102, "HAVEN", "Last safe settlement");
-        buildSign(target, 0, terrainY(160) + 4, 160, "WHISPERING WOODS", "First Hunt grounds");
-        buildSign(target, 0, terrainY(GATE_Z) + 4, GATE_Z - 8, "THE FIRST GATE", "Only the worthy pass");
+        buildSign(target, 0, y + 5, -104, "HAVEN", "Last safe settlement");
+        buildSign(target, 0, terrainYAt(0, 160) + 4, 160, "WHISPERING WOODS", "First Hunt grounds");
+        buildSign(target, 0, terrainYAt(0, GATE_Z) + 5, GATE_Z - 8, "THE FIRST GATE", "Only the worthy pass");
     }
 
     private void buildHaven(final World target, final int y) {
-        // Town square and broad stone avenues.
-        fill(target, -72, -112, 72, -28, y, Material.STONE_BRICKS);
-        fill(target, -52, -98, 52, -46, y + 1, Material.POLISHED_ANDESITE);
-        buildPath(target, -160, -65, 160, -65, 5);
-        buildPath(target, 0, -130, 0, 165, 5);
+        fill(target, -118, -125, 118, 70, y, Material.STONE_BRICKS);
+        fill(target, -100, -112, 100, 55, y + 1, Material.POLISHED_ANDESITE);
+        buildPath(target, -160, -62, 160, -62, 5);
+        buildPath(target, 0, -132, 0, 180, 5);
+        fill(target, -27, -97, 27, -45, y + 2, Material.SMOOTH_STONE);
+        buildFountain(target, 0, y + 3, -70);
+        buildBell(target, 0, y + 4, -37);
 
-        // Central plaza.
-        fill(target, -22, -92, 22, -48, y + 1, Material.SMOOTH_STONE);
-        buildFountain(target, 0, y + 2, -70);
-        buildBell(target, 0, y + 3, -38);
+        buildBuilding(target, -62, y + 2, -103, 50, 27, "WARDEN HALL", Material.STONE_BRICKS, Material.DEEPSLATE_TILES, Material.OAK_LOG);
+        buildBuilding(target, 12, y + 2, -103, 50, 27, "REN'S MARKET", Material.SPRUCE_PLANKS, Material.SPRUCE_SLAB, Material.SPRUCE_LOG);
+        buildBuilding(target, -103, y + 2, -55, 36, 28, "HAVEN INN", Material.OAK_PLANKS, Material.SPRUCE_SLAB, Material.OAK_LOG);
+        buildBuilding(target, 67, y + 2, -55, 36, 28, "BLACKSMITH", Material.STONE_BRICKS, Material.POLISHED_DEEPSLATE, Material.DEEPSLATE);
+        buildBuilding(target, -103, y + 2, 4, 36, 28, "GUILD HALL", Material.SPRUCE_PLANKS, Material.DARK_OAK_SLAB, Material.SPRUCE_LOG);
+        buildBuilding(target, 67, y + 2, 4, 36, 28, "STABLES", Material.OAK_PLANKS, Material.OAK_SLAB, Material.OAK_LOG);
+        buildBuilding(target, -48, y + 2, 39, 37, 25, "FLETCHER'S YARD", Material.OAK_PLANKS, Material.SPRUCE_SLAB, Material.SPRUCE_LOG);
+        buildBuilding(target, 10, y + 2, 39, 37, 25, "FARMWARD", Material.OAK_PLANKS, Material.OAK_SLAB, Material.OAK_LOG);
 
-        buildBuilding(target, -60, y + 1, -100, 46, 25, "WARDEN HALL", Material.STONE_BRICKS, Material.DEEPSLATE_TILES, Material.OAK_LOG);
-        buildBuilding(target, 14, y + 1, -100, 46, 25, "REN'S MARKET", Material.SPRUCE_PLANKS, Material.SPRUCE_SLAB, Material.SPRUCE_LOG);
-        buildBuilding(target, -105, y + 1, -58, 34, 26, "HAVEN INN", Material.OAK_PLANKS, Material.SPRUCE_SLAB, Material.OAK_LOG);
-        buildBuilding(target, 72, y + 1, -58, 34, 26, "BLACKSMITH", Material.STONE_BRICKS, Material.POLISHED_DEEPSLATE, Material.DEEPSLATE);
-        buildBuilding(target, -105, y + 1, -5, 34, 26, "GUILD HALL", Material.SPRUCE_PLANKS, Material.DARK_OAK_SLAB, Material.SPRUCE_LOG);
-        buildBuilding(target, 72, y + 1, -5, 34, 26, "STABLES", Material.OAK_PLANKS, Material.OAK_SLAB, Material.OAK_LOG);
-        buildBuilding(target, -48, y + 1, 30, 38, 26, "FLETCHER'S YARD", Material.OAK_PLANKS, Material.SPRUCE_SLAB, Material.SPRUCE_LOG);
-        buildBuilding(target, 10, y + 1, 30, 38, 26, "FARMWARD", Material.OAK_PLANKS, Material.OAK_SLAB, Material.OAK_LOG);
-
-        buildWatchtower(target, -125, y + 1, -115);
-        buildWatchtower(target, 125, y + 1, -115);
-        buildWatchtower(target, -125, y + 1, 45);
-        buildWatchtower(target, 125, y + 1, 45);
-        buildWall(target);
-        buildMarketStalls(target, y + 2);
-        buildFlowerBeds(target, y + 2);
+        buildWatchtower(target, -124, y + 2, -113);
+        buildWatchtower(target, 124, y + 2, -113);
+        buildWatchtower(target, -124, y + 2, 51);
+        buildWatchtower(target, 124, y + 2, 51);
+        buildTownWall(target);
+        buildMarketStalls(target, y + 4);
+        buildFlowerBeds(target, y + 4);
     }
-
-    private void buildNorthRoad(final World target) { buildPath(target, 0, 85, 0, GATE_Z, 4); }
-    private void buildSouthRoad(final World target) { buildPath(target, 0, -105, 0, -430, 4); }
-    private void buildEastRoad(final World target) { buildPath(target, 150, -60, 620, -60, 4); }
-    private void buildWestRoad(final World target) { buildPath(target, -150, -60, -620, -60, 4); }
 
     private void buildWhisperingWoodsOutpost(final World target) {
         final int z = 405;
-        buildBuilding(target, -38, terrainY(z) + 1, z, 30, 18, "RANGER CAMP", Material.SPRUCE_PLANKS, Material.SPRUCE_SLAB, Material.SPRUCE_LOG);
-        buildWatchtower(target, 45, terrainY(z) + 1, z - 4);
-        buildSign(target, -5, terrainY(z) + 4, z - 10, "WHISPERING WOODS", "Wolves roam ahead");
+        final int y = terrainYAt(0, z) + 1;
+        buildBuilding(target, -35, y, z, 30, 19, "RANGER CAMP", Material.SPRUCE_PLANKS, Material.SPRUCE_SLAB, Material.SPRUCE_LOG);
+        buildWatchtower(target, 46, y, z - 4);
+        buildSign(target, -5, y + 5, z - 10, "WHISPERING WOODS", "Wolves roam ahead");
     }
 
     private void buildFirstGate(final World target) {
-        final int baseY = terrainY(GATE_Z);
-        for (int x = -18; x <= 18; x++) {
-            for (int yy = baseY + 1; yy <= baseY + 13; yy++) {
-                if (Math.abs(x) <= 4 && yy < baseY + 8) continue;
-                target.getBlockAt(x, yy, GATE_Z).setType(Material.DEEPSLATE_BRICKS);
-            }
+        final int baseY = terrainYAt(0, GATE_Z);
+        for (int x = -19; x <= 19; x++) for (int yy = baseY + 1; yy <= baseY + 14; yy++) {
+            if (Math.abs(x) <= 4 && yy < baseY + 8) continue;
+            target.getBlockAt(x, yy, GATE_Z).setType(Material.DEEPSLATE_BRICKS);
         }
-        for (int x = -4; x <= 4; x++) for (int yy = baseY + 8; yy <= baseY + 13; yy++) target.getBlockAt(x, yy, GATE_Z).setType(Material.IRON_BARS);
-        for (int yy = baseY + 1; yy <= baseY + 16; yy++) {
-            target.getBlockAt(-19, yy, GATE_Z).setType(Material.DEEPSLATE_BRICKS);
-            target.getBlockAt(19, yy, GATE_Z).setType(Material.DEEPSLATE_BRICKS);
+        for (int x = -4; x <= 4; x++) for (int yy = baseY + 8; yy <= baseY + 14; yy++) target.getBlockAt(x, yy, GATE_Z).setType(Material.IRON_BARS);
+        for (int yy = baseY + 1; yy <= baseY + 17; yy++) {
+            target.getBlockAt(-20, yy, GATE_Z).setType(Material.DEEPSLATE_BRICKS);
+            target.getBlockAt(20, yy, GATE_Z).setType(Material.DEEPSLATE_BRICKS);
         }
-        buildWatchtower(target, -26, baseY + 1, GATE_Z - 10);
-        buildWatchtower(target, 26, baseY + 1, GATE_Z - 10);
-        buildBuilding(target, -32, baseY + 1, GATE_Z + 35, 64, 22, "FIRST GATE ENCLAVE", Material.COBBLED_DEEPSLATE, Material.DEEPSLATE_TILES, Material.DEEPSLATE);
+        buildWatchtower(target, -27, baseY + 1, GATE_Z - 11);
+        buildWatchtower(target, 27, baseY + 1, GATE_Z - 11);
     }
 
-    private void buildWall(final World target) {
-        for (int x = -150; x <= 150; x++) {
-            for (int yy = 73; yy <= 78; yy++) {
-                target.getBlockAt(x, yy, -122).setType(Material.STONE_BRICKS);
-                target.getBlockAt(x, yy, 63).setType(Material.STONE_BRICKS);
-            }
+    private void buildTownWall(final World target) {
+        for (int x = -150; x <= 150; x++) for (int y = 74; y <= 79; y++) {
+            target.getBlockAt(x, y, -124).setType(Material.STONE_BRICKS);
+            target.getBlockAt(x, y, 68).setType(Material.STONE_BRICKS);
         }
-        for (int z = -122; z <= 63; z++) {
-            for (int yy = 73; yy <= 78; yy++) {
-                target.getBlockAt(-150, yy, z).setType(Material.STONE_BRICKS);
-                target.getBlockAt(150, yy, z).setType(Material.STONE_BRICKS);
-            }
+        for (int z = -124; z <= 68; z++) for (int y = 74; y <= 79; y++) {
+            target.getBlockAt(-150, y, z).setType(Material.STONE_BRICKS);
+            target.getBlockAt(150, y, z).setType(Material.STONE_BRICKS);
         }
-        buildGateOpening(target, 0, -122);
-        buildGateOpening(target, 0, 63);
+        for (int x = -8; x <= 8; x++) for (int y = 74; y <= 79; y++) {
+            target.getBlockAt(x, y, -124).setType(Material.AIR);
+            target.getBlockAt(x, y, 68).setType(Material.AIR);
+        }
     }
 
-    private static void buildGateOpening(final World world, final int centerX, final int z) {
-        for (int x = centerX - 7; x <= centerX + 7; x++) for (int y = 73; y <= 78; y++) world.getBlockAt(x, y, z).setType(Material.AIR);
-    }
-
-    private void buildBuilding(final World target, final int x, final int y, final int z, final int width, final int depth, final String label, final Material wall, final Material roof, final Material frame) {
-        for (int px = x; px < x + width; px++) {
-            for (int pz = z; pz < z + depth; pz++) {
-                target.getBlockAt(px, y, pz).setType(wall);
-            }
+    private static void buildBuilding(final World target, final int x, final int y, final int z, final int width, final int depth,
+                                      final String label, final Material wall, final Material roof, final Material frame) {
+        for (int px = x; px < x + width; px++) for (int pz = z; pz < z + depth; pz++) target.getBlockAt(px, y, pz).setType(wall);
+        for (int px = x; px < x + width; px++) for (int py = y + 1; py <= y + 6; py++) {
+            target.getBlockAt(px, py, z).setType(frame);
+            target.getBlockAt(px, py, z + depth - 1).setType(frame);
         }
-        for (int px = x; px < x + width; px++) {
-            for (int py = y + 1; py <= y + 6; py++) {
-                target.getBlockAt(px, py, z).setType(frame);
-                target.getBlockAt(px, py, z + depth - 1).setType(frame);
-            }
+        for (int pz = z; pz < z + depth; pz++) for (int py = y + 1; py <= y + 6; py++) {
+            target.getBlockAt(x, py, pz).setType(frame);
+            target.getBlockAt(x + width - 1, py, pz).setType(frame);
         }
-        for (int pz = z; pz < z + depth; pz++) {
-            for (int py = y + 1; py <= y + 6; py++) {
-                target.getBlockAt(x, py, pz).setType(frame);
-                target.getBlockAt(x + width - 1, py, pz).setType(frame);
-            }
-        }
-        for (int px = x + 1; px < x + width - 1; px++) for (int pz = z + 1; pz < z + depth - 1; pz++) {
-            for (int py = y + 1; py <= y + 5; py++) target.getBlockAt(px, py, pz).setType(Material.AIR);
-        }
-        for (int px = x + 1; px < x + width - 1; px += 2) {
-            for (int layer = 0; layer < 3; layer++) {
-                target.getBlockAt(px, y + 7 + layer, z + layer).setType(roof);
-                target.getBlockAt(px, y + 7 + layer, z + depth - 1 - layer).setType(roof);
-            }
+        for (int px = x + 1; px < x + width - 1; px++) for (int pz = z + 1; pz < z + depth - 1; pz++) for (int py = y + 1; py <= y + 5; py++) target.getBlockAt(px, py, pz).setType(Material.AIR);
+        for (int py = y + 7; py <= y + 9; py++) {
+            final int inset = py - (y + 7);
+            for (int px = x + inset; px < x + width - inset; px++) for (int pz = z + inset; pz < z + depth - inset; pz++) target.getBlockAt(px, py, pz).setType(roof);
         }
         for (int py = y + 1; py <= y + 2; py++) target.getBlockAt(x + width / 2, py, z).setType(Material.AIR);
-        addWindows(target, x, y + 3, z, width, depth);
+        for (int wx = x + 4; wx < x + width - 2; wx += 7) {
+            target.getBlockAt(wx, y + 3, z).setType(Material.GLASS_PANE);
+            target.getBlockAt(wx, y + 3, z + depth - 1).setType(Material.GLASS_PANE);
+        }
         buildSign(target, x + 2, y + 7, z - 1, label, "");
     }
 
-    private static void addWindows(final World target, final int x, final int y, final int z, final int width, final int depth) {
-        for (int wx = x + 4; wx < x + width - 2; wx += 7) {
-            target.getBlockAt(wx, y, z).setType(Material.GLASS_PANE);
-            target.getBlockAt(wx, y, z + depth - 1).setType(Material.GLASS_PANE);
-        }
-        for (int wz = z + 4; wz < z + depth - 2; wz += 7) {
-            target.getBlockAt(x, y, wz).setType(Material.GLASS_PANE);
-            target.getBlockAt(x + width - 1, y, wz).setType(Material.GLASS_PANE);
-        }
-    }
-
     private static void buildWatchtower(final World target, final int x, final int y, final int z) {
-        for (int px = x - 2; px <= x + 2; px++) for (int pz = z - 2; pz <= z + 2; pz++) {
-            for (int py = y; py <= y + 8; py++) target.getBlockAt(px, py, pz).setType(Material.STONE_BRICKS);
-        }
-        for (int px = x - 1; px <= x + 1; px++) for (int pz = z - 1; pz <= z + 1; pz++) for (int py = y + 1; py <= y + 7; py++) target.getBlockAt(px, py, pz).setType(Material.AIR);
-        for (int px = x - 3; px <= x + 3; px++) for (int pz = z - 3; pz <= z + 3; pz++) target.getBlockAt(px, y + 9, pz).setType(Material.DEEPSLATE_TILES);
-        target.getBlockAt(x, y + 10, z).setType(Material.SOUL_LANTERN);
+        for (int px = x - 3; px <= x + 3; px++) for (int pz = z - 3; pz <= z + 3; pz++) for (int py = y; py <= y + 9; py++) target.getBlockAt(px, py, pz).setType(Material.STONE_BRICKS);
+        for (int px = x - 2; px <= x + 2; px++) for (int pz = z - 2; pz <= z + 2; pz++) for (int py = y + 1; py <= y + 8; py++) target.getBlockAt(px, py, pz).setType(Material.AIR);
+        for (int px = x - 4; px <= x + 4; px++) for (int pz = z - 4; pz <= z + 4; pz++) target.getBlockAt(px, y + 10, pz).setType(Material.DEEPSLATE_TILES);
+        target.getBlockAt(x, y + 11, z).setType(Material.SOUL_LANTERN);
     }
 
     private static void buildFountain(final World target, final int x, final int y, final int z) {
-        for (int dx = -5; dx <= 5; dx++) for (int dz = -5; dz <= 5; dz++) target.getBlockAt(x + dx, y, z + dz).setType(Material.STONE_BRICKS);
-        for (int dx = -3; dx <= 3; dx++) for (int dz = -3; dz <= 3; dz++) target.getBlockAt(x + dx, y + 1, z + dz).setType(Material.WATER);
-        for (int dy = 1; dy <= 4; dy++) target.getBlockAt(x, y + dy, z).setType(Material.QUARTZ_BLOCK);
-        target.getBlockAt(x, y + 5, z).setType(Material.WATER);
+        for (int dx = -6; dx <= 6; dx++) for (int dz = -6; dz <= 6; dz++) target.getBlockAt(x + dx, y, z + dz).setType(Material.STONE_BRICKS);
+        for (int dx = -4; dx <= 4; dx++) for (int dz = -4; dz <= 4; dz++) target.getBlockAt(x + dx, y + 1, z + dz).setType(Material.WATER);
+        for (int dy = 1; dy <= 5; dy++) target.getBlockAt(x, y + dy, z).setType(Material.QUARTZ_BLOCK);
+        target.getBlockAt(x, y + 6, z).setType(Material.WATER);
     }
 
     private static void buildBell(final World target, final int x, final int y, final int z) {
         target.getBlockAt(x, y, z).setType(Material.STONE_BRICKS);
         target.getBlockAt(x, y + 1, z).setType(Material.OAK_FENCE);
         target.getBlockAt(x, y + 2, z).setType(Material.BELL);
-        for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) if (Math.abs(dx) + Math.abs(dz) == 2) target.getBlockAt(x + dx, y + 1, z + dz).setType(Material.SPRUCE_FENCE);
     }
 
     private static void buildMarketStalls(final World target, final int y) {
-        final int[][] points = {{-36, -56}, {-10, -56}, {16, -56}, {42, -56}, {-36, -44}, {-10, -44}, {16, -44}, {42, -44}};
-        for (int[] p : points) {
-            final int x = p[0], z = p[1];
+        final int[][] points = {{-38, -58}, {-12, -58}, {14, -58}, {40, -58}, {-38, -45}, {-12, -45}, {14, -45}, {40, -45}};
+        for (final int[] point : points) {
+            final int x = point[0], z = point[1];
             for (int dx = -2; dx <= 2; dx++) for (int dz = -1; dz <= 1; dz++) target.getBlockAt(x + dx, y, z + dz).setType(Material.SPRUCE_PLANKS);
             for (int dx = -2; dx <= 2; dx++) {
-                target.getBlockAt(x + dx, y + 1, z - 1).setType(Material.STRIPPED_SPRUCE_LOG);
                 target.getBlockAt(x + dx, y + 4, z - 1).setType(Material.WHITE_WOOL);
                 target.getBlockAt(x + dx, y + 4, z).setType(Material.WHITE_WOOL);
             }
-            target.getBlockAt(x - 2, y + 1, z - 1).setType(Material.SPRUCE_FENCE);
-            target.getBlockAt(x + 2, y + 1, z - 1).setType(Material.SPRUCE_FENCE);
         }
     }
 
     private static void buildFlowerBeds(final World target, final int y) {
-        for (int x = -55; x <= 55; x += 11) {
-            target.getBlockAt(x, y, -40).setType(Material.MOSS_BLOCK);
-            target.getBlockAt(x + 1, y, -40).setType(Material.MOSS_BLOCK);
-            target.getBlockAt(x, y + 1, -40).setType(Material.POPPY);
-            target.getBlockAt(x + 1, y + 1, -40).setType(Material.DANDELION);
+        for (int x = -70; x <= 70; x += 14) {
+            target.getBlockAt(x, y, -37).setType(Material.MOSS_BLOCK);
+            target.getBlockAt(x + 1, y, -37).setType(Material.MOSS_BLOCK);
+            target.getBlockAt(x, y + 1, -37).setType(Material.POPPY);
+            target.getBlockAt(x + 1, y + 1, -37).setType(Material.DANDELION);
         }
     }
 
-    private void buildPath(final World target, final int x1, final int z1, final int x2, final int z2, final int radius) {
-        final int sx = Integer.signum(x2 - x1);
-        final int sz = Integer.signum(z2 - z1);
-        int x = x1, z = z1;
+    private void buildPath(final World target, int x1, int z1, final int x2, final int z2, final int radius) {
+        final int sx = Integer.signum(x2 - x1), sz = Integer.signum(z2 - z1);
         int steps = 0;
         while (true) {
-            final int surface = terrainY(x, z);
+            final int surface = terrainYAt(x1, z1);
             for (int dx = -radius; dx <= radius; dx++) for (int dz = -radius; dz <= radius; dz++) {
-                final int y = Math.max(1, surface);
-                target.getBlockAt(x + dx, y, z + dz).setType(Material.POLISHED_ANDESITE);
+                target.getBlockAt(x1 + dx, surface, z1 + dz).setType(Material.POLISHED_ANDESITE);
             }
-            if (x == x2 && z == z2) break;
-            if (x != x2) x += sx;
-            if (z != z2) z += sz;
-            if (++steps > 7000) break;
+            if (x1 == x2 && z1 == z2) break;
+            if (x1 != x2) x1 += sx;
+            if (z1 != z2) z1 += sz;
+            if (++steps > 10000) break;
         }
     }
 
     private void ensureNpcs() {
-        ensureNpc(NPC_LYRA, "§6Warden Lyra", location(0, 73, -86), Villager.Profession.ARMORER);
-        ensureNpc(NPC_REN, "§aMerchant Ren", location(38, 73, -86), Villager.Profession.FLETCHER);
-        ensureNpc("ascension:innkeeper_mara", "§dInnkeeper Mara", location(-88, 73, -45), Villager.Profession.LIBRARIAN);
-        ensureNpc("ascension:blacksmith_dain", "§cBlacksmith Dain", location(88, 73, -45), Villager.Profession.TOOLSMITH);
-        ensureNpc("ascension:guide_elian", "§bGuide Elian", location(0, 73, 15), Villager.Profession.CARTOGRAPHER);
-        ensureNpc("ascension:stablemaster_kael", "§eStablemaster Kael", location(88, 73, 10), Villager.Profession.FARMER);
+        ensureNpc(NPC_LYRA, "§6Warden Lyra", location(0, 73, -87), Villager.Profession.ARMORER);
+        ensureNpc(NPC_REN, "§aMerchant Ren", location(38, 73, -87), Villager.Profession.FLETCHER);
+        ensureNpc("ascension:innkeeper_mara", "§dInnkeeper Mara", location(-84, 73, -47), Villager.Profession.LIBRARIAN);
+        ensureNpc("ascension:blacksmith_dain", "§cBlacksmith Dain", location(84, 73, -47), Villager.Profession.TOOLSMITH);
+        ensureNpc("ascension:guide_elian", "§bGuide Elian", location(0, 73, 14), Villager.Profession.CARTOGRAPHER);
+        ensureNpc("ascension:stablemaster_kael", "§eStablemaster Kael", location(84, 73, 8), Villager.Profession.FARMER);
     }
 
-    private void ensureNpc(final String id, final String name, final Location location, final Villager.Profession profession) {
-        for (final Entity entity : this.world.getNearbyEntities(location, 8, 5, 8)) {
-            if (id.equals(entity.getPersistentDataContainer().get(this.npcKey, PersistentDataType.STRING))) return;
-        }
-        final Villager villager = (Villager) this.world.spawnEntity(location, EntityType.VILLAGER);
+    private void ensureNpc(final String id, final String name, final Location loc, final Villager.Profession profession) {
+        for (final Entity entity : this.world.getNearbyEntities(loc, 8, 5, 8)) if (id.equals(entity.getPersistentDataContainer().get(this.npcKey, PersistentDataType.STRING))) return;
+        final Villager villager = (Villager) this.world.spawnEntity(loc, EntityType.VILLAGER);
         villager.getPersistentDataContainer().set(this.npcKey, PersistentDataType.STRING, id);
-        villager.setCustomName(name);
-        villager.setCustomNameVisible(true);
-        villager.setAI(false);
-        villager.setInvulnerable(true);
-        villager.setSilent(true);
-        villager.setCollidable(false);
-        villager.setProfession(profession);
-        villager.setPersistent(true);
+        villager.setCustomName(name); villager.setCustomNameVisible(true);
+        villager.setAI(false); villager.setInvulnerable(true); villager.setSilent(true); villager.setCollidable(false); villager.setPersistent(true); villager.setProfession(profession);
     }
 
     private void giveStarterEquipment(final Player player) {
@@ -493,30 +435,27 @@ public final class FloorOneWorldService implements Listener {
         final var definition = this.items.findDefinition(id).orElse(null);
         if (definition == null) return null;
         final Material material;
-        try {
-            material = Material.valueOf(definition.data().getString("material", "WOODEN_SWORD").toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException exception) {
-            return null;
-        }
+        try { material = Material.valueOf(definition.data().getString("material", "WOODEN_SWORD").toUpperCase(Locale.ROOT)); }
+        catch (IllegalArgumentException exception) { return null; }
         final var stack = new org.bukkit.inventory.ItemStack(material);
         final var meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.displayName(net.kyori.adventure.text.Component.text(definition.descriptor().displayName()));
-            stack.setItemMeta(meta);
-        }
+        if (meta != null) { meta.displayName(net.kyori.adventure.text.Component.text(definition.descriptor().displayName())); stack.setItemMeta(meta); }
         this.itemEncoder.encode(this.items.create(id), stack);
         return stack;
     }
 
-    private int terrainY(final int z) {
-        if (this.world == null) return 72;
-        return this.world.getHighestBlockYAt(0, z);
+    private int terrainYAt(final int x, final int z) {
+        return this.world == null ? 72 : this.world.getHighestBlockYAt(x, z);
     }
 
     private Location spawnLocation() { return location(0, 73, -72); }
     private Location location(final double x, final double y, final double z) { return new Location(this.world, x + 0.5, y, z + 0.5); }
 
-    private void buildSign(final World world, final int x, final int y, final int z, final String line1, final String line2) {
+    private static void fill(final World world, final int x1, final int z1, final int x2, final int z2, final int y, final Material material) {
+        for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) for (int z = Math.min(z1, z2); z <= Math.max(z1, z2); z++) world.getBlockAt(x, y, z).setType(material);
+    }
+
+    private static void buildSign(final World world, final int x, final int y, final int z, final String line1, final String line2) {
         final var block = world.getBlockAt(x, y, z);
         block.setType(Material.OAK_SIGN);
         if (block.getState() instanceof Sign sign) {
@@ -528,30 +467,22 @@ public final class FloorOneWorldService implements Listener {
 
     private static String displayNpcName(final String npc) {
         final int colon = npc.indexOf(':');
-        final String path = colon >= 0 ? npc.substring(colon + 1) : npc;
-        return path.replace('_', ' ');
+        return (colon >= 0 ? npc.substring(colon + 1) : npc).replace('_', ' ');
     }
 
-    private void prepareWorldMigration() {
+    private void migrateLegacyWorld() {
         if (!Files.exists(this.buildMarker)) return;
-        try {
-            if (Files.readString(this.buildMarker).contains(WORLD_VERSION)) return;
-        } catch (IOException exception) {
-            this.plugin.getLogger().warning("Could not read Floor 1 world version marker; rebuilding world.");
-        }
+        try { if (Files.readString(this.buildMarker).contains(WORLD_VERSION)) return; }
+        catch (IOException exception) { this.plugin.getLogger().warning("Could not read Floor 1 world marker; rebuilding it."); }
         final World existing = Bukkit.getWorld(WORLD_NAME);
         if (existing != null) {
             final World fallback = Bukkit.getWorlds().stream().filter(candidate -> !candidate.equals(existing)).findFirst().orElse(null);
-            if (fallback != null) {
-                for (final Player player : existing.getPlayers()) player.teleport(fallback.getSpawnLocation());
-            }
-            if (!Bukkit.unloadWorld(existing, false)) {
-                throw new IllegalStateException("Cannot unload legacy Ascension Floor 1 world.");
-            }
+            if (fallback != null) for (final Player player : existing.getPlayers()) player.teleport(fallback.getSpawnLocation());
+            if (!Bukkit.unloadWorld(existing, false)) throw new IllegalStateException("Cannot unload legacy Ascension Floor 1 world.");
         }
         final Path folder = this.plugin.getServer().getWorldContainer().toPath().resolve(WORLD_NAME);
         if (Files.exists(folder)) deleteRecursively(folder);
-        try { Files.deleteIfExists(this.buildMarker); } catch (IOException exception) { throw new IllegalStateException("Cannot clear world version marker", exception); }
+        try { Files.deleteIfExists(this.buildMarker); } catch (IOException exception) { throw new IllegalStateException("Cannot clear Floor 1 marker", exception); }
     }
 
     private boolean hasCurrentWorldBuild() {
@@ -563,9 +494,7 @@ public final class FloorOneWorldService implements Listener {
         try {
             Files.createDirectories(this.buildMarker.getParent());
             Files.writeString(this.buildMarker, WORLD_VERSION + "\n");
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to write Floor 1 build marker", exception);
-        }
+        } catch (IOException exception) { throw new IllegalStateException("Failed to write Floor 1 world marker", exception); }
     }
 
     private static void deleteRecursively(final Path root) {
@@ -574,8 +503,6 @@ public final class FloorOneWorldService implements Listener {
                 try { Files.deleteIfExists(path); }
                 catch (IOException exception) { throw new IllegalStateException("Failed to delete " + path, exception); }
             });
-        } catch (IOException exception) {
-            throw new IllegalStateException("Failed to inspect legacy world " + root, exception);
-        }
+        } catch (IOException exception) { throw new IllegalStateException("Failed to delete legacy world " + root, exception); }
     }
 }
