@@ -12,6 +12,7 @@ import com.ascension.combat.model.HitResult;
 import com.ascension.combat.platform.BukkitCombatEntity;
 import com.ascension.combat.service.CombatService;
 import com.ascension.effects.runtime.EffectContext;
+import com.ascension.effects.runtime.EffectContainer;
 import com.ascension.effects.runtime.EffectInstance;
 import com.ascension.effects.runtime.EffectSource;
 import com.ascension.effects.service.EffectService;
@@ -19,21 +20,24 @@ import com.ascension.session.model.PlayerSession;
 import com.ascension.session.service.PlayerSessionManager;
 import com.ascension.stats.attribute.AttributeContainer;
 import com.ascension.stats.service.AttributeService;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 
-/**
- * Bukkit boundary for the generic ability runtime.
- */
+/** Bukkit boundary for the generic ability runtime. */
 public final class BukkitAbilityRuntimeGateway implements AbilityRuntimeGateway {
 
     private final PlayerSessionManager sessions;
     private final AttributeService attributes;
     private final CombatService combat;
     private final EffectService effects;
+    private final Map<UUID, MobRuntimeState> mobState = new ConcurrentHashMap<>();
 
     public BukkitAbilityRuntimeGateway(
         final PlayerSessionManager sessions,
@@ -50,20 +54,39 @@ public final class BukkitAbilityRuntimeGateway implements AbilityRuntimeGateway 
     @Override
     public Optional<CombatEntity> combatEntity(final UUID uniqueId) {
         requireMainThread();
-        final org.bukkit.entity.Entity entity = Bukkit.getEntity(Objects.requireNonNull(uniqueId, "uniqueId"));
+        final UUID id = Objects.requireNonNull(uniqueId, "uniqueId");
+        final org.bukkit.entity.Entity entity = Bukkit.getEntity(id);
         if (!(entity instanceof LivingEntity livingEntity) || livingEntity.isDead()) {
+            this.mobState.remove(id);
             return Optional.empty();
         }
+        final Optional<PlayerSession> session = this.sessions.session(id);
+        if (session.isPresent()) {
+            return Optional.of(new BukkitCombatEntity(livingEntity, session.get().attributes(), session.get().activeEffects()));
+        }
+        final MobRuntimeState state = this.mobState.computeIfAbsent(id, ignored ->
+            new MobRuntimeState(this.attributes.createContainer(), new EffectContainer())
+        );
+        return Optional.of(new BukkitCombatEntity(livingEntity, state.attributes(), state.effects()));
+    }
 
-        final AttributeContainer attributeContainer = this.sessions.session(uniqueId)
-            .map(PlayerSession::attributes)
-            .orElseGet(this.attributes::createContainer);
+    @Override
+    public Collection<CombatEntity> nearbyCombatEntities(final UUID originId, final double radius) {
+        requireMainThread();
+        if (!Double.isFinite(radius) || radius <= 0.0D) return java.util.List.of();
+        final CombatEntity origin = this.combatEntity(originId).orElse(null);
+        if (!(origin instanceof BukkitCombatEntity bukkitOrigin)) return java.util.List.of();
 
-        final var effectContainer = this.sessions.session(uniqueId)
-            .map(PlayerSession::activeEffects)
-            .orElseGet(com.ascension.effects.runtime.EffectContainer::new);
-
-        return Optional.of(new BukkitCombatEntity(livingEntity, attributeContainer, effectContainer));
+        final double radiusSquared = radius * radius;
+        final Map<UUID, CombatEntity> result = new LinkedHashMap<>();
+        for (final org.bukkit.entity.Entity entity : bukkitOrigin.entity().getNearbyEntities(radius, radius, radius)) {
+            if (!(entity instanceof LivingEntity living) || living.isDead()) continue;
+            if (living.getUniqueId().equals(originId)) continue;
+            final double distanceSquared = living.getLocation().distanceSquared(bukkitOrigin.entity().getLocation());
+            if (distanceSquared > radiusSquared) continue;
+            this.combatEntity(living.getUniqueId()).ifPresent(target -> result.put(target.uniqueId(), target));
+        }
+        return java.util.List.copyOf(result.values());
     }
 
     @Override
@@ -72,35 +95,17 @@ public final class BukkitAbilityRuntimeGateway implements AbilityRuntimeGateway 
     }
 
     @Override
-    public HitResult attack(
-        final CombatEntity attacker,
-        final CombatEntity target,
-        final AssetId abilityId,
-        final double damage
-    ) {
+    public HitResult attack(final CombatEntity attacker, final CombatEntity target, final AssetId abilityId, final double damage) {
         requireMainThread();
         final DamageSource source = new DamageSource() {
-            @Override
-            public String id() {
-                return abilityId.toString();
-            }
-
-            @Override
-            public String name() {
-                return abilityId.toString();
-            }
-
-            @Override
-            public Optional<CombatEntity> entity() {
-                return Optional.of(attacker);
-            }
+            @Override public String id() { return abilityId.toString(); }
+            @Override public String name() { return abilityId.toString(); }
+            @Override public Optional<CombatEntity> entity() { return Optional.of(attacker); }
         };
-        final AttackContext context = new AttackContext(
-            Optional.of(attacker),
-            new CombatTarget(target),
+        return this.combat.execute(new AttackContext(
+            Optional.of(attacker), new CombatTarget(target),
             new DamageContext(source, DefaultDamageType.PHYSICAL, damage)
-        );
-        return this.combat.execute(context);
+        ));
     }
 
     @Override
@@ -114,9 +119,15 @@ public final class BukkitAbilityRuntimeGateway implements AbilityRuntimeGateway 
         return this.effects.applyEffect(target, effectId, source, context);
     }
 
+    public void forget(final UUID uniqueId) {
+        this.mobState.remove(Objects.requireNonNull(uniqueId, "uniqueId"));
+    }
+
     private static void requireMainThread() {
         if (!Bukkit.isPrimaryThread()) {
             throw new IllegalStateException("Ability execution against live Bukkit entities must occur on the server thread");
         }
     }
+
+    private record MobRuntimeState(AttributeContainer attributes, EffectContainer effects) {}
 }
