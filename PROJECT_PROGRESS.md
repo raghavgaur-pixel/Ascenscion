@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-Phase 9: Ability and content systems — foundation in progress.
+Phase 9: Ability and content systems — runtime foundation in progress.
 
 ## Completed
 
@@ -41,22 +41,25 @@ Phase 9: Ability and content systems — foundation in progress.
 - Added equipment engine with separation of concerns from the item engine
 - Implemented the Effects Engine, introducing an abstract EffectService managing generic gameplay effect lifecycles, duration ticking, modifier scaling, and automatic teardown on player disconnect
 - Implemented the Combat Engine foundation with a deterministic attack/damage pipeline, typed damage sources and types, immutable combat snapshots, isolated health mutation, and internal combat events
-- Phase 9 foundation: canonical stat vocabulary, immutable stat values/sets, data-driven ability definitions, and explicit ability request/result/service contracts
+- Phase 9 foundation: canonical SAO-inspired stat vocabulary, immutable stat values/sets, data-driven ability definitions, and explicit ability request/result/service contracts
+- Phase 9 runtime foundation: executor boundary, executor registry, atomic resource gateway, runtime cooldown tracker, actor-scoped transactional ability service, and rollback on failed execution
+- Locked the core gameplay model: classless builds, dual progression, persistent tower floors, and high-stakes non-permanent death
 
 ## Not Started / In Progress
 
-- Ability registry integration and runtime execution
-- Resource and cooldown enforcement
-- Targeting pipeline
-- Player level/XP progression
-- Tower runtime progression
-- Gameplay content and first playable floor
+- Targeting resolver and platform-safe targeting adapters
+- Ability content schema validation and built-in content pack
+- Player level/XP progression and derived stat formulas
+- Tower runtime progression and floor state
+- Dungeons, world events, quests, professions, guilds, parties, and economy
+- First complete playable floor vertical slice
+- Full integration/build verification in a Maven-enabled environment
 
 ## Risks / Constraints
 
-- Local environment currently lacks `mvn`, so compile verification is pending.
-- `javac` is available locally, but dependency-resolved project compilation still requires Maven or an equivalent build runner.
+- Local environment currently lacks `mvn`, so dependency-resolved compile verification is pending.
+- The repository is being developed on `phase-9-foundation` so changes can be reviewed before promotion to `main`.
 
 ## Next Implementation Step
 
-Implement the Phase 9 ability runtime: registry-backed definitions, cooldown/resource enforcement, validation, targeting contracts, and deterministic execution integration with CombatService and EffectsService.
+Implement the ability targeting pipeline and bind successful ability execution to the existing CombatService/EffectsService contracts, then establish player level/XP and tower-floor progression as the next persistent gameplay layer.
