@@ -3,7 +3,6 @@ package com.ascension.phase9;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
 import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
@@ -20,9 +19,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** Pastes authored structures through WorldEdit when it is installed on the server. */
+/** Pastes the original authored First Gate Litematic through WorldEdit. */
 public final class AuthoredStructurePaster {
-    private static final String PASTE_MARKER = ".floor_001_first_gate_pasted_v1";
+    private static final String PASTE_MARKER = ".floor_001_first_gate_pasted_v2";
     private static final int FIRST_GATE_X = -50;
     private static final int FIRST_GATE_Y = 70;
     private static final int FIRST_GATE_Z = 690;
@@ -35,34 +34,37 @@ public final class AuthoredStructurePaster {
         if (Files.exists(marker)) return;
 
         if (Bukkit.getPluginManager().getPlugin("WorldEdit") == null) {
-            plugin.getLogger().warning("WorldEdit is not installed; skipping authored First Gate schematic paste.");
+            plugin.getLogger().warning("WorldEdit is not installed; skipping authored First Gate paste.");
             return;
         }
 
         final World world = Bukkit.getWorld(FloorOneWorldService.WORLD_NAME);
         if (world == null) {
-            plugin.getLogger().warning("Floor 1 world is not loaded; skipping authored First Gate schematic paste.");
+            plugin.getLogger().warning("Floor 1 world is not loaded; skipping authored First Gate paste.");
             return;
         }
 
+        // Use the original Litematic supplied by the builder rather than the previously
+        // converted Sponge schematic, which contained block states WorldEdit could not decode.
         final Path schematic = plugin.getDataFolder().toPath()
             .resolve("floor1-assets")
-            .resolve("medieval-town-collection-1-castle.schem");
+            .resolve("medieval-town-collection-1-castle.litematic");
         if (!Files.exists(schematic)) {
-            plugin.getLogger().warning("Missing First Gate schematic: " + schematic);
+            plugin.getLogger().warning("Missing First Gate Litematic: " + schematic);
             return;
         }
 
         try (InputStream input = Files.newInputStream(schematic)) {
             final ClipboardFormat format = ClipboardFormats.findByFile(schematic.toFile());
             if (format == null) {
-                plugin.getLogger().warning("WorldEdit could not identify schematic format: " + schematic.getFileName());
+                plugin.getLogger().warning("WorldEdit could not identify First Gate format: " + schematic.getFileName());
                 return;
             }
             final Clipboard clipboard;
             try (ClipboardReader reader = format.getReader(input)) {
                 clipboard = reader.read();
             }
+
             final com.sk89q.worldedit.world.World targetWorld = BukkitAdapter.adapt(world);
             try (var editSession = WorldEdit.getInstance().newEditSession(targetWorld)) {
                 final Operation operation = new ClipboardHolder(clipboard)
@@ -72,10 +74,15 @@ public final class AuthoredStructurePaster {
                     .build();
                 Operations.complete(operation);
             }
-            Files.writeString(marker, "floor_001_first_gate_pasted_v1");
-            plugin.getLogger().info("Pasted authored First Gate castle at " + FIRST_GATE_X + "," + FIRST_GATE_Y + "," + FIRST_GATE_Z);
-        } catch (IOException | WorldEditException exception) {
-            plugin.getLogger().warning("Unable to paste authored First Gate: " + exception.getMessage());
+
+            Files.writeString(marker, "floor_001_first_gate_pasted_v2");
+            plugin.getLogger().info("Pasted authored First Gate Litematic at "
+                + FIRST_GATE_X + "," + FIRST_GATE_Y + "," + FIRST_GATE_Z);
+        } catch (IOException | WorldEditException | RuntimeException exception) {
+            plugin.getLogger().severe("Unable to paste authored First Gate: "
+                + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+            // Do not take the entire Ascension plugin down because an optional authored
+            // structure cannot be decoded. The rest of Floor 1 remains playable.
         }
     }
 }
