@@ -45,8 +45,7 @@ public final class PhaseNineModule extends AbstractModule {
         final JavaPlugin plugin = services.require(JavaPlugin.class);
         final MobService mobs = new MobService(registries, runtime, plugin);
 
-        final PremiumFloorOneBuilder premiumBuilder = new PremiumFloorOneBuilder(plugin);
-        premiumBuilder.prepareFreshWorld();
+        AuthoredFloorOneProvisioner.install(plugin);
 
         final FloorOneWorldService floorWorld = new FloorOneWorldService(plugin, quests, mobs, services.require(AbilityService.class), services.require(ItemService.class), services.require(ItemMetadataEncoder.class), journal);
         services.register(ProgressionService.class, progression);
@@ -58,7 +57,7 @@ public final class PhaseNineModule extends AbstractModule {
 
         plugin.getServer().getPluginManager().registerEvents(journal, plugin);
         floorWorld.start();
-        premiumBuilder.build();
+        AuthoredStructurePaster.apply(plugin);
 
         final EventBus events = services.require(EventBus.class);
         final GameplayCombatListener combatListener = new GameplayCombatListener(quests, registries, services);
